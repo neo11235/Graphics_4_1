@@ -126,12 +126,16 @@ std::vector<Point> triangleColor
 Point(0,1,0),Point(1,0,0),Point(0,1,0),Point(1,0,0)};
 std::vector<Point> circleColor 
 = {Point(0.5,1.0,1.0),Point(1.0,0.0,1.0),
-Point()
+Point(1.0f, 0.5f, 0.0f), Point(0.5f, 0.5f, 0.5f),
+Point(0.0f, 0.5f, 0.5f), Point(2.0f, 0.5f, 1.0f)
 };
 std::vector<Point> transformedTriangle = dTriangle;
-
+std::vector<Point> circularSegment(4);
 GLdouble curAngle = 0.0;
 GLdouble dAngle = 1.0;
+const GLdouble maxAngle = asin(sqrt(2.0/3.0))*180/M_PI;
+const GLdouble topAngle = asin(1.0/sqrt(3.0));
+
 
 void transformTriangle(GLdouble angle)
 {
@@ -142,43 +146,28 @@ void transformTriangle(GLdouble angle)
         transformedTriangle = dTriangle;
         return;
    }
-   if(angle > 45)
+   if(angle > maxAngle)
    {
-       std::cout << "Warning greater than 45:"
+       std::cout << "Warning greater than max angle:"
         << angle << std::endl; 
-        angle = 45.0;
+        angle = maxAngle;
    }
-   GLdouble len = tlen / sin(toRad(angle + 45));
-   
    angle = toRad(angle);
-
-   Point vec1(tlen, 0, tlen);
-   Point norm1(-tlen,0,tlen);
-   Point raxis(0,tlen,0);
+   GLdouble len = tlen * sqrt(2.0/3.0) / sin(angle + topAngle);
    
-   Point tmp = rotate(vec1, norm1, angle);
-   Point raxis2 = rotate(raxis, norm1, angle);
-   tmp = rotate(tmp, raxis2, -angle);
-   tmp = unit(tmp);
-   tmp = tmp * len;
-   transformedTriangle[0] = tmp;
-   
-   tmp = rotate(norm1, vec1, -angle);
-   raxis2 = rotate(raxis, vec1, -angle);
-   tmp = rotate(tmp, raxis2, angle);
-   tmp = unit(tmp);
-   tmp = tmp * len;
-   transformedTriangle[2] = tmp;
 
-   tmp = rotate(raxis,Point(1,0,0),angle);
-   tmp = unit(tmp);
-   tmp = tmp * len;
-   transformedTriangle[1] = tmp;
+//    Point tmp = dTriangle[0] + dTriangle[2];
+//    Point raxis = cross(tmp, dTriangle[1]);
+//    tmp = rotate(dTriangle[1], raxis, angle);
+//    transformedTriangle[1] = unit(tmp) * len;
 
-
-
-
-
+   for(int i = 0; i < 3; ++i)
+   {
+        Point tmp = dTriangle[(i+1)%3] + dTriangle[(i+2)%3];
+        Point raxis = cross(tmp, dTriangle[i]);
+        tmp = rotate(dTriangle[i], raxis, -angle);
+        transformedTriangle[i] = unit(tmp) * len;
+   }
 
 }
 
@@ -354,7 +343,7 @@ void keyboardListener(unsigned char key, int x, int y) {
         transformTriangle(curAngle);
         break;
     case ',':
-        curAngle = std::min(curAngle + dAngle, 45.0);
+        curAngle = std::min(curAngle + dAngle, maxAngle);
         transformTriangle(curAngle);
         break;
 
