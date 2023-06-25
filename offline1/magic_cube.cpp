@@ -76,7 +76,7 @@ const GLdouble tlen = 1;
 std::vector<Point> dTriangle = {Point(tlen,0,tlen),Point(0,sqrt(2.0)*tlen,0),Point(-tlen,0,tlen)};
 std::vector<Point> triangleColor 
 ={Point(1,0,0),Point(0,1,0),Point(1,0,0),Point(0,1,0),
-Point(0,1,0),Point(1,0,0),Point(0,1,0),Point(1,0,0)};
+Point(1,0,0),Point(0,1,0),Point(1,0,0),Point(0,1,0)};
 std::vector<Point> circleColor 
 = {Point(0.5,1.0,1.0),Point(1.0,0.0,1.0),
 Point(1.0f, 0.5f, 0.0f), Point(0.5f, 0.5f, 0.5f),
@@ -96,6 +96,7 @@ void rotateTTriangle(GLdouble angle)
 {
     dTriangle[0] = rotate(dTriangle[0],dTriangle[1],angle);
     dTriangle[2] = rotate(dTriangle[2],dTriangle[1],angle);
+    // glRotated(angle,0,1,0);
 }
 void transformTriangle(GLdouble angle)
 {
@@ -236,6 +237,8 @@ void display() {
     // if (isPyramid) drawPyramid();
     //drawAxes();
     Point ax = unit(dTriangle[0] + dTriangle[1]);
+    ax = cross(ax, Point(0,1,0));
+    ax = unit(ax);
     for(int i = 0; i < 4 ; ++i)
     {
         glPushMatrix();
@@ -244,16 +247,16 @@ void display() {
         glRotated(i*90,0,1,0);
         
         drawTriangle();
-        glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 0.0f);
         drawCylinder();
         glColor3f(circleColor[i].x,circleColor[i].y,circleColor[i].z);
         drawCircularSegment();
         
-        glRotated(2*90,1,0,0);
+        glRotated(2*90,ax.x,ax.y,ax.z);
         
         glColor3f(triangleColor[i+4].x,triangleColor[i+4].y,triangleColor[i+4].z);
         drawTriangle();
-        glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 0.0f);
         drawCylinder();
         glPopMatrix();
     }
