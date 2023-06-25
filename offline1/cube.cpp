@@ -1,7 +1,41 @@
+#define _USE_MATH_DEFINES
 #include <windows.h>  // for MS Windows
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
+#include <vector>
+#include <iostream>
+#define toRad(x) (((x) * M_PI) / 180)
 
+struct Point {
+  GLdouble x, y, z;
+  Point() : x(0), y(0), z(0) {}
+  Point(GLdouble X, GLdouble Y, GLdouble Z) :
+      x(X), y(Y), z(Z) {}
+  Point operator + (const Point& u) const {
+    return Point(x + u.x, y + u.y, z + u.z); }
+  Point operator - (const Point& u) const {
+    return Point(x - u.x, y - u.y, z - u.z); }
+  Point operator * (const GLdouble u) const {
+    return Point(x * u, y * u, z * u); }
+  Point operator / (const GLdouble u) const {
+    return Point(x / u, y / u, z / u); }
+};
+GLdouble dot(Point a, Point b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z; }
+Point cross(Point a, Point b) {
+  return Point(a.y*b.z - a.z*b.y,
+     a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); }
+GLdouble length(Point a) { return sqrt(dot(a, a));}
+GLdouble distance(Point a, Point b) {
+  return length(a-b); }
+Point unit(const Point &p) { return p/length(p); }
+// Rotate p around axis x, with angle radians.
+Point rotate(Point p, Point axis, GLdouble angle) {
+  axis = unit(axis);Point comp1 = p * cos(angle);
+  Point comp2 = axis*(1-cos(angle))*dot(axis,p);
+  Point comp3 = cross(axis, p) * sin(angle);
+  return comp1 + comp2 + comp3;
+}
 /* Initialize OpenGL Graphics */
 void initGL() {
     // Set "clearing" or background color
@@ -84,6 +118,78 @@ void drawCube() {
     glEnd();  // End of drawing color-cube
 }
 
+
+const GLdouble tlen = 1;
+std::vector<Point> dTriangle = {Point(tlen,0,tlen),Point(0,sqrt(2.0)*tlen,0),Point(-tlen,0,tlen)};
+std::vector<Point> triangleColor 
+={Point(1,0,0),Point(0,1,0),Point(1,0,0),Point(0,1,0),
+Point(0,1,0),Point(1,0,0),Point(0,1,0),Point(1,0,0)};
+std::vector<Point> circleColor 
+= {Point(0.5,1.0,1.0),Point(1.0,0.0,1.0),
+Point()
+};
+std::vector<Point> transformedTriangle = dTriangle;
+
+GLdouble curAngle = 0.0;
+GLdouble dAngle = 1.0;
+
+void transformTriangle(GLdouble angle)
+{
+   // angle must be >= 0 and less than 45 
+   if(angle < 0){
+        std::cout << "Warning angle less than 0:"
+        << angle << std::endl;
+        transformedTriangle = dTriangle;
+        return;
+   }
+   if(angle > 45)
+   {
+       std::cout << "Warning greater than 45:"
+        << angle << std::endl; 
+        angle = 45.0;
+   }
+   GLdouble len = tlen / sin(toRad(angle + 45));
+   
+   angle = toRad(angle);
+
+   Point vec1(tlen, 0, tlen);
+   Point norm1(-tlen,0,tlen);
+   Point raxis(0,tlen,0);
+   
+   Point tmp = rotate(vec1, norm1, angle);
+   Point raxis2 = rotate(raxis, norm1, angle);
+   tmp = rotate(tmp, raxis2, -angle);
+   tmp = unit(tmp);
+   tmp = tmp * len;
+   transformedTriangle[0] = tmp;
+   
+   tmp = rotate(norm1, vec1, -angle);
+   raxis2 = rotate(raxis, vec1, -angle);
+   tmp = rotate(tmp, raxis2, angle);
+   tmp = unit(tmp);
+   tmp = tmp * len;
+   transformedTriangle[2] = tmp;
+
+   tmp = rotate(raxis,Point(1,0,0),angle);
+   tmp = unit(tmp);
+   tmp = tmp * len;
+   transformedTriangle[1] = tmp;
+
+
+
+
+
+
+}
+
+void drawTriangle()
+{
+    glBegin(GL_TRIANGLES);
+        for(Point p : transformedTriangle)
+            glVertex3f(p.x,p.y,p.z);
+    glEnd();
+}
+
 /* Draw a pyramid centered at the origin */
 void drawPyramid() {
     glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
@@ -137,9 +243,23 @@ void display() {
               centerx,centery,centerz,
               upx,upy,upz);
     // draw
-    if (isAxes) drawAxes();
-    if (isCube) drawCube();
-    if (isPyramid) drawPyramid();
+    // if (isAxes) drawAxes();
+    // if (isCube) drawCube();
+    // if (isPyramid) drawPyramid();
+    //drawAxes();
+
+    for(int i = 0; i < 4 ; ++i)
+    {
+        glPushMatrix();
+        glColor3f(triangleColor[i].x,triangleColor[i].y,triangleColor[i].z);
+        glRotated(i*90,0,1,0);
+        drawTriangle();
+        glRotated(2*90,1,0,0);
+        glColor3f(triangleColor[i+4].x,triangleColor[i+4].y,triangleColor[i+4].z);
+        drawTriangle();
+        glPopMatrix();
+    }
+
 
     glutSwapBuffers();  // Render now
 }
@@ -228,6 +348,15 @@ void keyboardListener(unsigned char key, int x, int y) {
     case 'p':
         isPyramid = !isPyramid; // show/hide Pyramid if 'p' is pressed
         break;
+    
+    case '.':
+        curAngle = std::max(curAngle - dAngle, 0.0);
+        transformTriangle(curAngle);
+        break;
+    case ',':
+        curAngle = std::min(curAngle + dAngle, 45.0);
+        transformTriangle(curAngle);
+        break;
 
     // Control exit
     case 27:    // ESC key
@@ -273,6 +402,7 @@ void specialKeyListener(int key, int x,int y) {
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
+    transformTriangle(0.0);
     glutInit(&argc, argv);                      // Initialize GLUT
     glutInitWindowSize(640, 640);               // Set the window's initial width & height
     glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner
