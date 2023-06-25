@@ -70,53 +70,6 @@ void drawAxes() {
     glEnd();
 }
 
-/* Draw a cube centered at the origin */
-void drawCube() {
-    glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
-        // Top face (y = 1.0f)
-        // Define vertices in counter-clockwise (CCW) order with normal pointing out
-        glColor3f(0.0f, 1.0f, 0.0f);     // Green
-        glVertex3f( 1.0f, 1.0f, -1.0f);
-        glVertex3f(-1.0f, 1.0f, -1.0f);
-        glVertex3f(-1.0f, 1.0f,  1.0f);
-        glVertex3f( 1.0f, 1.0f,  1.0f);
-
-        // Bottom face (y = -1.0f)
-        glColor3f(1.0f, 0.5f, 0.0f);     // Orange
-        glVertex3f( 1.0f, -1.0f,  1.0f);
-        glVertex3f(-1.0f, -1.0f,  1.0f);
-        glVertex3f(-1.0f, -1.0f, -1.0f);
-        glVertex3f( 1.0f, -1.0f, -1.0f);
-
-        // Front face  (z = 1.0f)
-        glColor3f(1.0f, 0.0f, 0.0f);     // Red
-        glVertex3f( 1.0f,  1.0f, 1.0f);
-        glVertex3f(-1.0f,  1.0f, 1.0f);
-        glVertex3f(-1.0f, -1.0f, 1.0f);
-        glVertex3f( 1.0f, -1.0f, 1.0f);
-
-        // Back face (z = -1.0f)
-        glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
-        glVertex3f( 1.0f, -1.0f, -1.0f);
-        glVertex3f(-1.0f, -1.0f, -1.0f);
-        glVertex3f(-1.0f,  1.0f, -1.0f);
-        glVertex3f( 1.0f,  1.0f, -1.0f);
-
-        // Left face (x = -1.0f)
-        glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-        glVertex3f(-1.0f,  1.0f,  1.0f);
-        glVertex3f(-1.0f,  1.0f, -1.0f);
-        glVertex3f(-1.0f, -1.0f, -1.0f);
-        glVertex3f(-1.0f, -1.0f,  1.0f);
-
-        // Right face (x = 1.0f)
-        glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
-        glVertex3f(1.0f,  1.0f, -1.0f);
-        glVertex3f(1.0f,  1.0f,  1.0f);
-        glVertex3f(1.0f, -1.0f,  1.0f);
-        glVertex3f(1.0f, -1.0f, -1.0f);
-    glEnd();  // End of drawing color-cube
-}
 
 
 const GLdouble tlen = 1;
@@ -127,16 +80,23 @@ Point(0,1,0),Point(1,0,0),Point(0,1,0),Point(1,0,0)};
 std::vector<Point> circleColor 
 = {Point(0.5,1.0,1.0),Point(1.0,0.0,1.0),
 Point(1.0f, 0.5f, 0.0f), Point(0.5f, 0.5f, 0.5f),
-Point(0.0f, 0.5f, 0.5f), Point(2.0f, 0.5f, 1.0f)
+Point(0.0f, 0.5f, 0.5f), Point(0.0f, 1.0f, 0.0f)
 };
 std::vector<Point> transformedTriangle = dTriangle;
 std::vector<Point> circularSegment(4);
+std::vector<Point> cylinder(4);
+
 GLdouble curAngle = 0.0;
 GLdouble dAngle = 1.0;
 const GLdouble maxAngle = asin(sqrt(2.0/3.0))*180/M_PI;
 const GLdouble topAngle = asin(1.0/sqrt(3.0));
-
-
+const GLdouble smallestLength = .01;
+const GLdouble rotationSpeed = M_PI/36.0;
+void rotateTTriangle(GLdouble angle)
+{
+    dTriangle[0] = rotate(dTriangle[0],dTriangle[1],angle);
+    dTriangle[2] = rotate(dTriangle[2],dTriangle[1],angle);
+}
 void transformTriangle(GLdouble angle)
 {
    // angle must be >= 0 and less than 45 
@@ -168,6 +128,17 @@ void transformTriangle(GLdouble angle)
         tmp = rotate(dTriangle[i], raxis, -angle);
         transformedTriangle[i] = unit(tmp) * len;
    }
+   circularSegment[0] = transformedTriangle[0];
+   circularSegment[3] = rotate(transformedTriangle[2],Point(0,1,0),M_PI/2);
+   circularSegment[1] = circularSegment[0];
+   circularSegment[1].y = -circularSegment[1].y;
+   circularSegment[2] = circularSegment[3];
+   circularSegment[2].y = -circularSegment[2].y;
+
+   cylinder[0] = transformedTriangle[0];
+   cylinder[1] = circularSegment[3];
+   cylinder[2] = rotate(transformedTriangle[1],Point(0,1,0),M_PI/2);
+   cylinder[3] = transformedTriangle[1];
 
 }
 
@@ -178,43 +149,71 @@ void drawTriangle()
             glVertex3f(p.x,p.y,p.z);
     glEnd();
 }
-
-/* Draw a pyramid centered at the origin */
-void drawPyramid() {
-    glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
-        // Front
-        glColor3f(1.0f, 0.0f, 0.0f);     // Red
-        glVertex3f( 0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);     // Green
-        glVertex3f(-1.0f, -1.0f, 1.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-        glVertex3f(1.0f, -1.0f, 1.0f);
-
-        // Right
-        glColor3f(1.0f, 0.0f, 0.0f);     // Red
-        glVertex3f(0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-        glVertex3f(1.0f, -1.0f, 1.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);     // Green
-        glVertex3f(1.0f, -1.0f, -1.0f);
-
-        // Back
-        glColor3f(1.0f, 0.0f, 0.0f);     // Red
-        glVertex3f(0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);     // Green
-        glVertex3f(1.0f, -1.0f, -1.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-        glVertex3f(-1.0f, -1.0f, -1.0f);
-
-        // Left
-        glColor3f(1.0f,0.0f,0.0f);       // Red
-        glVertex3f( 0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f,0.0f,1.0f);       // Blue
-        glVertex3f(-1.0f,-1.0f,-1.0f);
-        glColor3f(0.0f,1.0f,0.0f);       // Green
-        glVertex3f(-1.0f,-1.0f, 1.0f);
-    glEnd();   // Done drawing the pyramid
+//given in counterclockwise order
+//GL_QUAD must be called before calling it
+void drawCylinderHelper(Point p1, Point p2, Point p3, Point p4)
+{
+    if(length(p1 - p2) < smallestLength)
+    {
+        glVertex3f(p1.x,p1.y,p1.z);
+        glVertex3f(p2.x,p2.y,p2.z);
+        glVertex3f(p3.x,p3.y,p3.z);
+        glVertex3f(p4.x,p4.y,p4.z);
+        return;
+    }
+    Point mid1 = (p1 + p2);
+    Point mid2 = (p3 + p4);
+    GLdouble len1 = length(p1);
+    mid1 = unit(mid1) * len1;
+    mid2 = unit(mid2) * len1;
+    drawCylinderHelper(p1, mid1, mid2, p4);
+    drawCylinderHelper(mid1, p2, p3, mid2);
 }
+void drawCylinder()
+{
+    glBegin(GL_QUADS);
+        drawCylinderHelper(
+            cylinder[0],cylinder[1],cylinder[2],cylinder[3]
+        );
+    glEnd();
+}
+//given in counterclockwise order
+//GL_QUAD must be called before calling it
+void drawCircularSegmentHelper(Point p1,Point p2,Point p3,Point p4)
+{
+    if(length(p1 - p2) < smallestLength)
+    {
+        glVertex3f(p1.x,p1.y,p1.z);
+        glVertex3f(p2.x,p2.y,p2.z);
+        glVertex3f(p3.x,p3.y,p3.z);
+        glVertex3f(p4.x,p4.y,p4.z);
+        return;
+    }
+    GLdouble len1 = length(p1);
+    Point m1,m2,m3,m4,mm;
+    m1 = unit(p1 + p2) * len1;
+    m2 = unit(p2 + p3) * len1;
+    m3 = unit(p3 + p4) * len1;
+    m4 = unit(p4 + p1) * len1;
+    mm = unit(m1 + m3) * len1;
+    drawCircularSegmentHelper(p1,m1,mm,m4);
+    drawCircularSegmentHelper(m1,p2,m2,mm);
+    drawCircularSegmentHelper(mm,m2,p3,m3);
+    drawCircularSegmentHelper(m4,mm,m3,p4);
+}
+void drawCircularSegment()
+{
+    glBegin(GL_QUADS);
+        drawCircularSegmentHelper(
+            circularSegment[0],
+            circularSegment[1],
+            circularSegment[2],
+            circularSegment[3]
+        );
+    glEnd();
+}
+
+
 
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
@@ -236,18 +235,52 @@ void display() {
     // if (isCube) drawCube();
     // if (isPyramid) drawPyramid();
     //drawAxes();
-
+    Point ax = unit(dTriangle[0] + dTriangle[1]);
     for(int i = 0; i < 4 ; ++i)
     {
         glPushMatrix();
         glColor3f(triangleColor[i].x,triangleColor[i].y,triangleColor[i].z);
+        
         glRotated(i*90,0,1,0);
+        
         drawTriangle();
+        glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+        drawCylinder();
+        glColor3f(circleColor[i].x,circleColor[i].y,circleColor[i].z);
+        drawCircularSegment();
+        
         glRotated(2*90,1,0,0);
+        
         glColor3f(triangleColor[i+4].x,triangleColor[i+4].y,triangleColor[i+4].z);
         drawTriangle();
+        glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+        drawCylinder();
         glPopMatrix();
     }
+    glPushMatrix();
+        ax = dTriangle[2];
+        glRotated(90,ax.x,ax.y,ax.z);
+        glColor3f(circleColor[4].x,circleColor[4].y,circleColor[4].z);
+        drawCircularSegment();
+        glRotated(180,ax.x,ax.y,ax.z);
+        glColor3f(circleColor[5].x,circleColor[5].y,circleColor[5].z);
+        drawCircularSegment();
+    glPopMatrix();
+
+    glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+    glPushMatrix();
+        glRotated(90,dTriangle[0].x,dTriangle[0].y,dTriangle[0].z);
+        drawCylinder();
+        glRotated(90*2,dTriangle[0].x,dTriangle[0].y,dTriangle[0].z);
+        drawCylinder();
+        glRotated(90*2,dTriangle[2].x,dTriangle[2].y,dTriangle[2].z);
+        drawCylinder();
+        ax = Point(0,0,0) -dTriangle[0];
+        glRotated(90*2,ax.x,ax.y,ax.z); 
+        drawCylinder();
+    glPopMatrix();
+
+
 
 
     glutSwapBuffers();  // Render now
@@ -329,15 +362,14 @@ void keyboardListener(unsigned char key, int x, int y) {
 
     // Control what is shown
     case 'a':
-        isAxes = !isAxes;   // show/hide Axes if 'a' is pressed
+        rotateTTriangle(-rotationSpeed);
+        transformTriangle(curAngle);
         break;
-    case 'c':
-        isCube = !isCube;   // show/hide Cube if 'c' is pressed
+    case 'd':
+        rotateTTriangle(rotationSpeed);
+        transformTriangle(curAngle);
         break;
-    case 'p':
-        isPyramid = !isPyramid; // show/hide Pyramid if 'p' is pressed
-        break;
-    
+
     case '.':
         curAngle = std::max(curAngle - dAngle, 0.0);
         transformTriangle(curAngle);
