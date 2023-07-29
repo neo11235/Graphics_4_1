@@ -5,6 +5,8 @@
 #include <stack>
 #include <assert.h>
 #include <cmath>
+#include <cstring>
+#include <iomanip>
 using namespace std;
 #include "matrix.h"
 vector<string> tokenize(string s,char delim = ' '){
@@ -37,17 +39,40 @@ void normalize(Matrix<double>& vec){
         vec[i][0] /= len;
 }
 Matrix<double> R(int raxis, Matrix<double> vec, double angle){
+    Matrix<double> RM(4,4,1);
+    int i = (raxis +1) % 3;
+    int j = (raxis +2) % 3;
+    RM[i][i] = cos(angle);
+    RM[i][j] = -sin(angle);
+    RM[j][j] = cos(angle);
+    RM[j][i] = sin(angle);
+    assert(vec.n == 4 && vec.m == 1);
+    return RM * vec;
+}
+void normalizew(Matrix<double> & mat){
 
 }
 int main(){
     ifstream fin;
-    fin.open("scene.txt");
+    fin.open("1\\scene.txt");
+    ofstream fout;
+    fout.open("stage1.txt");
     stack<Matrix<double> > S;
     Matrix<double> M(4,4,1);
+    fout << fixed << setprecision(6);
+
+    double ex, ey, ez, lx, ly, lz, ux, uy, uz, f1,f2,f3,f4;
+    fin >> ex >> ey >> ez
+    >> lx >> ly >> lz 
+    >> ux >> uy >> uz
+    >> f1 >> f2 >> f3 >> f4;
+
+
     while(!fin.eof())
     {
         string command;
         fin >> command;
+        cout << command <<endl;
         if(command == "triangle"){
             Matrix<double> points(4,4,0);
             for(int i = 0; i < 3; ++i){
@@ -56,6 +81,14 @@ int main(){
                 points[3][i] = 1;
             }
             points[3][3] = 1;
+            points = points * M;
+            normalizew(points);
+            for(int i = 0; i < 3; ++i){
+                for(int j = 0; j < 3; ++j){
+                    fout << points[j][i] << " \n"[ j == 2];
+                }
+            }
+            fout << '\n';
 
         }
         else if(command == "translate"){
@@ -63,6 +96,8 @@ int main(){
             for(int i = 0 ; i < 3; ++i)
                 fin >> T[i][3];
 
+            M = T * M ;
+            normalizew(M);
 
         }
         else if(command == "scale"){
@@ -70,7 +105,8 @@ int main(){
             for(int i = 0 ; i < 3; ++i)
                 fin >> T[i][i];
             
-            
+            M = T * M;
+            normalizew(M);
         }
         else if(command == "rotate"){
             Matrix<double> a(4,1,0);
@@ -92,21 +128,22 @@ int main(){
                 }
             }
             //RM
+            M = RM * M;
         }
         else if(command == "push"){
+            S.push(M);
 
         }
         else if(command == "pop"){
-
+            S.pop();
         }
         else if(command == "end"){
-
+            break;
         }
         else{
-            cout << "unknown command " << command << '\n';
+            cout << "unknown command \'" << command << '\'' << '\n';
             fin.close();
             exit(0);
         }
-
     }
 }
