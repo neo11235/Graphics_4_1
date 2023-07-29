@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+#text
+*.txt
+
+#image
+*.bmp
