@@ -123,6 +123,15 @@ public:
         for(int i=0;i<len;++i)
             M[i]-=val;
     }
+    Matrix<T> operator*(T const & val){
+        Matrix<T> res = *this;
+        for(int i = 0 ; i < n; ++i){
+            for(int j = 0; j < m; ++j){
+                res.M[getPos(i,j,m)] *= val;
+            }
+        }
+        return res;
+    }
     Matrix<T> operator*(Matrix<T> const& mat2)//tested
     {
         assert(M&&mat2.M&&m==mat2.n);
