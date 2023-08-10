@@ -31,8 +31,14 @@ void normvec(Matrix<double>& vec){
             len += vec[i][j] * vec[i][j];
         }
     }
+    if(!(len > EPS)){
+        cout << vec.n << ' ' << vec.m << endl;
+        cout << len << endl;
+        assert(false);
+    }
     len = sqrt(len);
-    assert(len > EPS);
+    
+
     for(int i = 0 ; i < vec.n; ++i){
         for(int j = 0; j < vec.m; ++j){
             vec[i][j] /= len;
@@ -65,25 +71,49 @@ double dot(Matrix<double> a, Matrix<double> b){
     return res;
 }
 Matrix<double> R(Matrix<double> x, Matrix<double> axis, double angle){
-    // Matrix<double> RM(4,4,1);
-    // int i = (raxis +1 ) % 3;
-    // int j = (raxis +2 ) % 3;
-    // RM[i][i] = cos(angle);
-    // RM[i][j] = -sin(angle);
-    // RM[j][j] = cos(angle);
-    // RM[j][i] = sin(angle);
-    // assert(vec.n == 4 && vec.m == 1);
-    // Matrix<double> tmp(1,4);
-    // for(int i = 0 ;i < 4; ++i)
-    //     tmp[0][i] = vec[i][0];
-    // return tmp * RM;
+
     normvec(axis);
     Matrix<double> res = x * cos(angle);
-    // return res;
-    res = res + axis * (1 - cos(angle)) * dot(axis, x) ;
-    // return res;
+    res = res + axis * (1 - cos(angle)) * dot(axis, x);
     res = res + cross(axis, x) * sin(angle);
     return res;
+}
+const string inputPath = "./TestCases/1/";
+const string outputPath = "";
+int Screen_Width, Screen_Height;
+static unsigned long int g_seed = 1;
+inline int random1(){
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & 0x7FFF;
+}
+void stage4(vector<Matrix<double> > triangles)
+{
+    ifstream config;
+    config.open(inputPath + "config.txt");
+
+    if(!config.is_open()){
+        cout << "Cannot open config file\n";
+        exit(0);
+    }
+
+    config >> Screen_Width >> Screen_Height;
+    config.close();
+    
+    int n = triangles.size();
+
+    vector<array<int,3> > color(n);
+    for(int i = 0; i < n; ++i){
+        for(int j = 0; j < 3; ++j){
+            color[i][j] = random1() & 0xFF;
+        }
+    }
+    
+    cout <<"screen height and width\n";
+    cout << Screen_Width << ' ' << Screen_Height << '\n';
+
+
+
+
 }
 int main(){
     Matrix<double> ihat(1,3,0),jhat(1,3,0),khat(1,3,0);
@@ -92,10 +122,26 @@ int main(){
     khat[0][2] = 1;
     ifstream fin;
     ofstream fout1,fout2,fout3;
-    fin.open("scene.txt");
-    fout1.open("stage1.txt");
-    fout2.open("stage2.txt");
-    fout3.open("stage3.txt");
+    fin.open(inputPath + "scene.txt");
+    fout1.open(outputPath + "stage1.txt");
+    fout2.open(outputPath + "stage2.txt");
+    fout3.open(outputPath + "stage3.txt");
+    if(!fin.is_open()){
+        cout << "Cant open scene.txt file\n";
+        exit(0);
+    }
+    if(!fout1.is_open()){
+        cout << "Cant open stage1.txt file\n";
+        exit(0);
+    }
+    if(!fout2.is_open()){
+        cout << "Cant open stage2.txt file\n";
+        exit(0);
+    }
+    if(!fout3.is_open()){
+        cout << "Cant open stage3.txt file\n";
+        exit(0);
+    }
     stack<Matrix<double> > S;
     Matrix<double> M(4,4,1);
     fout1 << fixed << setprecision(7);
@@ -135,7 +181,7 @@ int main(){
     PT[3][2] = -1;
     // cout << PT << endl;
 
-    
+    vector<Matrix<double> > triangles;
 
 
     while(!fin.eof())
@@ -174,6 +220,7 @@ int main(){
             // cout << "debug out3 \n" << out3 <<  "\n\n";
             // cout << "dbg out 2\n " << out2 << "\n\n";
             normalizew(out3);
+            triangles.push_back(out3);
             for(int i = 0; i < 3; ++i){
                 for(int j = 0; j < 3; ++j){
                     fout3 << out3[j][i] << " \n"[j == 2];
@@ -259,5 +306,9 @@ int main(){
     fout1.close();
     fout2.close();
     fout3.close();
+
+
+    stage4(triangles);
+
     return 0;
 }
