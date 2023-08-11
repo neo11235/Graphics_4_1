@@ -9,6 +9,7 @@
 #include <iomanip>
 using namespace std;
 #include "matrix.h"
+#include "bitmap_image.hpp"
 const double EPS = 1e-9;
 const double PI = acos(-1.0);
 const double convFactor = PI / 180.0;
@@ -56,7 +57,7 @@ void normalizew(Matrix<double> & mat){
         }
     }
 }
-Matrix<double> cross(Matrix<double> a, Matrix<double> b){
+Matrix<double> cross(Matrix<double> a, Matrix<double> b){ // row matrix
     return Matrix<double>(
         {{a[0][1] * b[0][2] - a[0][2] * b[0][1],
         -a[0][0] * b[0][2] + a[0][2] * b[0][0],
@@ -80,11 +81,30 @@ Matrix<double> R(Matrix<double> x, Matrix<double> axis, double angle){
 }
 const string inputPath = "./TestCases/1/";
 const string outputPath = "";
+const string imageFile = "out1.bmp";
+const double z_max = 1.0;
 int Screen_Width, Screen_Height;
+const double z_front_limit = -1.0;
 static unsigned long int g_seed = 1;
 inline int random1(){
     g_seed = (214013 * g_seed + 2531011);
     return (g_seed >> 16) & 0x7FFF;
+}
+pair<double,double> intersect(Matrix<double> &A, Matrix<double> &B, double ys){
+
+    double ipx, ipz;
+    if(abs(B[0][1] - A[0][1]) < EPS){
+        ipx = A[0][0];
+        ipz = A[0][2];
+    }
+    else{
+        ipx = A[0][0] + 
+        ((ys - A[0][1])/(B[0][1] - A[0][1])) * (B[0][0] - A[0][0]);
+
+        ipz = A[0][2] + 
+        ((ys - A[0][1])/(B[0][1] - A[0][1])) * (B[0][2] - A[0][2]);
+    }
+    return make_pair(ipx,ipz);
 }
 void stage4(vector<Matrix<double> > triangles)
 {
@@ -101,18 +121,153 @@ void stage4(vector<Matrix<double> > triangles)
     
     int n = triangles.size();
 
-    vector<array<int,3> > color(n);
+    vector<vector<int> > color(n, vector<int>(3));
     for(int i = 0; i < n; ++i){
         for(int j = 0; j < 3; ++j){
-            color[i][j] = random1() & 0xFF;
+            color[i][j] = random1() ;//& 0xFF;
         }
     }
     
     cout <<"screen height and width\n";
     cout << Screen_Width << ' ' << Screen_Height << '\n';
 
+    double dx = 2.0 / Screen_Width;
+    double dy = 2.0 / Screen_Height;
 
+    cout << "dx dy \n";
+    cout << dx << ' ' << dy << endl;
 
+    double Top_Y = 1 - dy / 2;
+    double Left_X = -1 + dx / 2;
+    
+    vector<vector<double> > z_buffer(Screen_Height,
+    vector<double>(Screen_Width, z_max));
+    vector<vector<vector<int> > > z_color(Screen_Height,
+    vector<vector<int>>(Screen_Width, vector<int>(3,0))
+    );
+
+    
+
+    for(int i = 0; i < n; ++i){
+        Matrix<double> A(1,3),B(1,3),C(1,3);
+        for(int j = 0; j < 3; ++j){
+            A[0][j] = triangles[i][j][0];
+            B[0][j] = triangles[i][j][1];
+            C[0][j] = triangles[i][j][2];
+        }
+        //order such that y coordinates sorted order becomes A , B , C
+        if(A[0][1] > B[0][1]){
+            swap(A,B);
+        }
+        if(C[0][1] < A[0][1]){
+            swap(A,C);
+            swap(B,C);
+        }
+        if(C[0][1] < B[0][1]){
+            swap(B,C);
+        }
+        if(i == 0 ){
+            cout <<"debug\n";
+            cout << A << '\n';
+            cout << B << '\n';
+            cout << C << '\n';
+        }
+        double ys = Top_Y;
+        for(int x = 0; x < Screen_Height; ++x){
+            double xa = INT_MAX, xb = INT_MIN;
+            double za,zb;
+            bool isect = false;
+            if(ys >= A[0][1] && ys <= B[0][1]){
+                double ipx,ipz;
+                tie(ipx, ipz) = intersect(A, B, ys);
+                if(ipx < xa){
+                    xa = ipx;
+                    za = ipz;
+                }
+                if(ipx > xb){
+                    xb = ipx;
+                    zb = ipz;
+                }
+                isect = true;
+            }
+            if(ys >= A[0][1] && ys <= C[0][1]){
+                double ipx, ipz;
+                tie(ipx, ipz) = intersect(A, C, ys);
+                if(ipx < xa){
+                    xa = ipx;
+                    za = ipz;
+                }
+                if(ipx > xb){
+                    xb = ipx;
+                    zb = ipz;
+                }
+                isect = true;
+            }
+            if(ys >= B[0][1] && ys <= C[0][1]){
+                double ipx, ipz;
+                tie(ipx, ipz) = intersect(B, C, ys);
+                if(ipx < xa){
+                    xa = ipx;
+                    za = ipz;
+                }
+                if(ipx > xb){
+                    xb = ipx;
+                    zb = ipz;
+                }
+                isect = true;
+            }
+            if(!isect){
+                ys -= dy;
+                continue;
+            }
+            int lo = round(xa / dx) + EPS + Screen_Width / 2.0;
+            int hi = round(xb / dx) + EPS + 1 + Screen_Width / 2.0;
+            
+            for(int y = max(lo,0); y < min(hi, Screen_Width); ++y){
+                double xx = Left_X + y * dx;
+                double factor = 0;
+                if(abs(xx - xa) < EPS){
+                    factor = 0;
+                }
+                else{
+                    factor = (xx - xa) / (xb - xa);
+                }
+                double pz = za + factor * (zb - za);
+                // pz = pz + 1; // depth from screen
+                //pz = 1 - pz;
+                if(pz < z_buffer[x][y] && pz >= z_front_limit)
+                {
+                    z_buffer[x][y] = pz;
+                    z_color[x][y] = color[i]; 
+                }
+                ++xx;
+            }
+            ys -= dy; 
+        }
+    }
+    ofstream fout4;
+    fout4.open("z_buffer.txt");
+    if(!fout4.is_open()){
+        cout << "Cannot open z_buffer.txt\n";
+        exit(0);
+    }
+    fout4 << fixed << setprecision(6);
+    for(int i = 0; i < Screen_Height; ++i){
+        for(int j = 0; j < Screen_Width; ++j){
+            if(!(abs(z_buffer[i][j] - z_max) < EPS))
+                fout4 << z_buffer[i][j] << '\t';
+        }
+        fout4 << '\n';
+    }
+    fout4.close();
+    cout << "finished z buffer\n";
+    bitmap_image image(Screen_Height, Screen_Width);
+    for(int x = 0; x < Screen_Height; ++x){
+        for(int y = 0; y < Screen_Width; ++y){
+            image.set_pixel(y,x,z_color[x][y][0], z_color[x][y][1], z_color[x][y][2]);
+        }
+    }
+    image.save_image(outputPath + imageFile);
 
 }
 int main(){
