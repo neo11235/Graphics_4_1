@@ -81,7 +81,7 @@ Matrix<double> R(Matrix<double> x, Matrix<double> axis, double angle){
 }
 const string inputPath = "./TestCases/1/";
 const string outputPath = "";
-const string imageFile = "out1.bmp";
+const string imageFile = "out.bmp";
 const double z_max = 1.0;
 int Screen_Width, Screen_Height;
 const double z_front_limit = -1.0;
