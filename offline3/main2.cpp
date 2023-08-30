@@ -1,6 +1,19 @@
 //#include <windows.h>  // for MS Windows
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <assert.h>
+#include <cmath>
+#include <cstring>
+#include <iomanip>
+#include "Point.cpp"
+#include "objects.cpp"
+#define vec Point
+#define toRad(x) (((x) * M_PI) / 180)
+using namespace std;
 
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -12,7 +25,7 @@ void initGL() {
 // Global variables
 GLfloat eyex = 4, eyey = 4, eyez = 4;
 GLfloat centerx = 0, centery = 0, centerz = 0;
-GLfloat upx = 0, upy = 1, upz = 0;
+GLfloat upx = 0, upy = 0, upz = 1;
 bool isAxes = true, isCube = false, isPyramid = false;
 
 /* Draw axes: X in Red, Y in Green and Z in Blue */
@@ -121,6 +134,11 @@ void drawPyramid() {
     glEnd();   // Done drawing the pyramid
 }
 
+GLdouble near, far, fovY, aspectRatio;
+int screenWidth, screenHeight;
+int levelOfRecursion;
+Checkerboard checkerboard;
+
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
 void display() {
@@ -136,10 +154,9 @@ void display() {
     gluLookAt(eyex,eyey,eyez,
               centerx,centery,centerz,
               upx,upy,upz);
-    // draw
-    if (isAxes) drawAxes();
-    if (isCube) drawCube();
-    if (isPyramid) drawPyramid();
+    
+    drawAxes();
+    checkerboard.glDraw();
 
     glutSwapBuffers();  // Render now
 }
@@ -270,9 +287,37 @@ void specialKeyListener(int key, int x,int y) {
     }
     glutPostRedisplay();    // Post a paint request to activate display()
 }
+//important variables
 
+
+// GLdouble near, far, fovY, aspectRatio;
+// int screenWidth, screenHeight;
+// int levelOfRecursion;
+// Checkerboard checkerboard;
+void fileReader()
+{
+    ifstream in;
+    in.open("description.txt");
+    if(!in.is_open())
+    {
+        cout << "Cannot open description.txt file\n";
+        exit(0);
+    }
+    in >> near >> far
+    >>fovY >> aspectRatio;
+    in >> levelOfRecursion >> screenHeight;
+    screenWidth = screenHeight;
+    in >> checkerboard.width >> checkerboard.surface.ambient 
+    >> checkerboard.surface.diffuse >> checkerboard.surface.reflection;
+
+    far = 1000;
+    checkerboard.width = 1;
+    in.close();
+
+}
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
+    fileReader();
     glutInit(&argc, argv);                      // Initialize GLUT
     glutInitWindowSize(640, 640);               // Set the window's initial width & height
     glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner

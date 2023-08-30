@@ -1,3 +1,5 @@
+#ifndef __POINT__h
+#define __POINT__h
 struct Point {
   GLdouble x, y, z;
   Point() : x(0), y(0), z(0) {}
@@ -28,3 +30,4 @@ Point rotate(Point p, Point axis, GLdouble angle) {
   Point comp3 = cross(axis, p) * sin(angle);
   return comp1 + comp2 + comp3;
 }
+#endif
