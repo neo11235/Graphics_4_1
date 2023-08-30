@@ -2,11 +2,11 @@
 #define __OBJECT__.h
 #include "Point.cpp"
 #include <GL/glut.h>
-struct Color1
+struct Color
 {
     GLdouble r, g, b;
-    Color1(){}
-    Color1(GLdouble r, GLdouble g, GLdouble b):r(r), g(g), b(b){}
+    Color(){}
+    Color(GLdouble r, GLdouble g, GLdouble b):r(r), g(g), b(b){}
 };
 
 struct Ray  
@@ -17,51 +17,69 @@ struct Ray
 };
 struct SurfaceProperty
 {
-    GLdouble ambient, diffuse, reflection;
+    GLdouble ambient, diffuse, reflection, shininess;
+
     SurfaceProperty(){
         ambient = diffuse = reflection = 0;
     }
     SurfaceProperty(GLdouble ambient, GLdouble diffuse, GLdouble reflection):
     ambient(ambient),diffuse(diffuse),reflection(reflection)
     {}
+    SurfaceProperty(GLdouble ambient, GLdouble diffuse, GLdouble reflection, GLdouble shininess):
+    ambient(ambient), diffuse(diffuse), reflection(reflection), shininess(shininess)
+    {}
 };
-
-struct Triangle{
-    Point vertex[3];
-    Triangle(){}
-    
-};
-
-struct Pyramid
+struct Object
 {
-    Point vertex[4];
-    Pyramid(){}
+    Color color;
+    SurfaceProperty surface;
+    virtual void draw() = 0;
+    Object(){}
 };
-struct Sphere
+
+struct Pyramid:Object
+{
+    Point corner;
+    GLdouble widht;
+    GLdouble height;
+    Pyramid(){}
+    virtual void draw(){
+
+    }
+};
+struct Sphere:Object
 {
     Point center;
     GLdouble radius;
     Sphere(){}
+    virtual void draw(){
+
+    }
     
 };
-struct Qube
+struct Cube:Object
 {
-    Point corners[2];
-    Qube(){}
+    Point corner;
+    GLdouble side;
+    Cube(){}
+    virtual void draw(){
+
+    }
 };
 struct Checkerboard
 {
     GLdouble width;
     SurfaceProperty surface;
-    Color1 color1 = {0.0,0.0,0.0};
-    Color1 color2 = {1.0, 1.0, 1.0};
+    Color color1 = {0.0,0.0,0.0}; // white
+    Color color2 = {1.0, 1.0, 1.0}; // black
+    int iteration;
     Checkerboard(){}
 
-    void glDraw(){
+    void draw(){
         glBegin(GL_QUADS);
-        for(int i = -20; i < 20; ++i)
+        for(int i = -iteration; i < iteration; ++i)
         {
-            for(int j = -20; j < 20; ++j)
+            for(int j = -iteration; j < iteration; ++j)
             {
                 GLdouble x = i * width, y = j *width;
                 if((i + j) % 2 == 0)
@@ -76,15 +94,16 @@ struct Checkerboard
                 glVertex3f(x + width, y, 0);
                 glVertex3f(x + width, y + width, 0);
                 glVertex3f(x, y + width, 0);
-
-                
             }
         }
         glEnd();
     }
-
 };
 
+struct Triangle{
+    Point vertex[3];
+    Triangle(){}  
+};
 
 
 
