@@ -138,6 +138,7 @@ GLdouble near, far, fovY, aspectRatio;
 int screenWidth, screenHeight;
 int levelOfRecursion;
 Checkerboard checkerboard;
+vector<void*> objects;
 
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
@@ -156,7 +157,10 @@ void display() {
               upx,upy,upz);
     
     drawAxes();
-    checkerboard.glDraw();
+    checkerboard.draw();
+    for(void * vp : objects){
+        ((Object*)(vp))->draw();
+    }
 
     glutSwapBuffers();  // Render now
 }
@@ -294,25 +298,77 @@ void specialKeyListener(int key, int x,int y) {
 // int screenWidth, screenHeight;
 // int levelOfRecursion;
 // Checkerboard checkerboard;
+// vector<void*> objects; 
 void fileReader()
 {
-    ifstream in;
-    in.open("description.txt");
-    if(!in.is_open())
+    ifstream fin;
+    fin.open("description.txt");
+    if(!fin.is_open())
     {
         cout << "Cannot open description.txt file\n";
         exit(0);
     }
-    in >> near >> far
+    fin >> near >> far
     >>fovY >> aspectRatio;
-    in >> levelOfRecursion >> screenHeight;
+    fin >> levelOfRecursion >> screenHeight;
     screenWidth = screenHeight;
-    in >> checkerboard.width >> checkerboard.surface.ambient 
+    fin >> checkerboard.width >> checkerboard.surface.ambient 
     >> checkerboard.surface.diffuse >> checkerboard.surface.reflection;
 
     far = 1000;
     checkerboard.width = 1;
-    in.close();
+    checkerboard.iteration = 50;
+    
+    int numberOfObjects;
+    fin >> numberOfObjects;
+    cout << "debug " << numberOfObjects << endl;
+    for(int i = 0; i < numberOfObjects; ++i){
+        string type;
+        fin >> type;
+        if(type == "sphere")
+        {
+            Sphere *sphere = new Sphere();
+            fin >> sphere->center.x >> sphere->center.y >> sphere->center.z
+            >> sphere->radius 
+            >> sphere->color.r >> sphere->color.g >> sphere->color.b
+            >> sphere->surface.ambient >> sphere->surface.diffuse
+            >> sphere->surface.specular >> sphere->surface.reflection
+            >> sphere->surface.shininess;
+            objects.push_back(sphere);
+        }
+        else if(type == "pyramid")
+        {
+            Pyramid *pyr = new Pyramid();
+            fin >> pyr->corner.x >> pyr->corner.y >> pyr->corner.z 
+            >> pyr->widht >> pyr->height
+            >> pyr->color.r >> pyr->color.g >> pyr->color.b
+            >> pyr->surface.ambient >> pyr->surface.diffuse 
+            >> pyr->surface.specular >> pyr->surface.reflection
+            >> pyr->surface.shininess;
+            objects.push_back(pyr);
+        }
+        else if(type == "cube")
+        {
+            Cube *cube = new Cube();
+            fin >> cube->corner.x >> cube->corner.y >> cube->corner.z
+            >> cube->side
+            >> cube->color.r >> cube->color.g >> cube->color.b
+            >> cube->surface.ambient >> cube->surface.diffuse 
+            >> cube->surface.specular >> cube->surface.reflection
+            >> cube->surface.shininess;
+           objects.push_back(cube);
+        }
+        else
+        {
+            cout << "Unknown object type\'" << type << "\'\n";
+            cout << i << endl;
+            exit(0);
+        }
+    }
+
+
+
+    fin.close();
 
 }
 /* Main function: GLUT runs as a console application starting at main()  */

@@ -17,7 +17,7 @@ struct Ray
 };
 struct SurfaceProperty
 {
-    GLdouble ambient, diffuse, reflection, shininess;
+    GLdouble ambient, diffuse, reflection, specular, shininess;
 
     SurfaceProperty(){
         ambient = diffuse = reflection = 0;
@@ -57,13 +57,35 @@ struct Sphere:Object
     }
     
 };
+int __dx[] = {0, 1, 1, 0, 0, 1, 1, 0};
+int __dy[] = {0, 0, 1, 1, 0, 0, 1, 1};
+int __dz[] = {0, 0, 0, 0, 1, 1, 1, 1};
 struct Cube:Object
 {
+    
     Point corner;
     GLdouble side;
     Cube(){}
-    virtual void draw(){
 
+
+    virtual void draw(){
+        glBegin(GL_QUADS);
+        glColor3f(color.r, color.g, color.b);
+        drawHelper(0, 1, 2, 3);
+        drawHelper(4, 5, 6, 7);
+        drawHelper(0, 1, 5, 4);
+        drawHelper(3, 2, 6, 7);
+        drawHelper(0, 1, 7, 3);
+        drawHelper(1, 5, 6, 2);
+        glEnd();
+    }
+    private:
+    void drawHelper(int i, int j, int k, int l)
+    {
+        glVertex3f(corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side);
+        glVertex3f(corner.x + __dx[j] * side, corner.y + __dy[j] * side, corner.z + __dz[j] * side);
+        glVertex3f(corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side);
+        glVertex3f(corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side);
     }
 };
 struct Checkerboard
