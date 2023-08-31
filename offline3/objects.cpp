@@ -40,13 +40,35 @@ struct Object
 struct Pyramid:Object
 {
     Point corner;
-    GLdouble widht;
+    GLdouble width;
     GLdouble height;
     Pyramid(){}
     virtual void draw(){
+        glColor3f(color.r, color.g, color.b);
         glBegin(GL_QUADS);
+            glVertex3f(corner.x, corner.y, corner.z);
+            glVertex3f(corner.x + width, corner.y, corner.z);
+            glVertex3f(corner.x + width, corner.y + width, corner.z);
+            glVertex3f(corner.x, corner.y + width, corner.z);
+        glEnd();
+        Point top(corner.x + width / 2, corner.y + width / 2, corner.z);
+        top = top + Point(0,0,height);
+        glBegin(GL_TRIANGLES);
+            glVertex3f(top.x, top.y, top.z);
+            glVertex3f(corner.x, corner.y, corner.z);
+            glVertex3f(corner.x + width, corner.y, corner.z);
 
+            glVertex3f(top.x, top.y, top.z);
+            glVertex3f(corner.x + width, corner.y, corner.z);
+            glVertex3f(corner.x + width, corner.y + width, corner.z);
 
+            glVertex3f(top.x, top.y, top.z);
+            glVertex3f(corner.x + width, corner.y + width, corner.z);
+            glVertex3f(corner.x, corner.y + width, corner.z);
+
+            glVertex3f(top.x, top.y, top.z);
+            glVertex3f(corner.x, corner.y + width, corner.z);
+            glVertex3f(corner.x, corner.y, corner.z);
         glEnd();
     }
 };
@@ -56,7 +78,11 @@ struct Sphere:Object
     GLdouble radius;
     Sphere(){}
     virtual void draw(){
-
+        glPushMatrix();
+        glColor3f(color.r, color.g, color.b);
+        glTranslated(center.x, center.y, center.z);
+        glutSolidSphere(radius, 100, 100);
+        glPopMatrix();
     }
     
 };
@@ -72,23 +98,15 @@ struct Cube:Object
 
 
     virtual void draw(){
-        std::cout << "debug cube draw " << corner.x << ' ' << corner.y << ' ' << corner.z << std::endl;
-        std::cout << side << std::endl;
+        // std::cout << "debug cube draw " << corner.x << ' ' << corner.y << ' ' << corner.z << std::endl;
+        // std::cout << side << std::endl;
         glBegin(GL_QUADS);
         glColor3f(color.r, color.g, color.b);
         drawHelper(0, 1, 2, 3);
-        glColor3f(0, color.g, color.b);
         drawHelper(4, 5, 6, 7);
-        glColor3f(color.r, color.g, color.b);
         drawHelper(0, 1, 5, 4);
-        glColor3f(color.r, color.g, color.b);
-        
         drawHelper(3, 2, 6, 7);
-        glColor3f(0, color.g, color.b);
-        
         drawHelper(0, 1, 7, 3);
-        glColor3f(color.r, color.g, color.b);
-        
         drawHelper(1, 5, 6, 2);
         glEnd();
     }

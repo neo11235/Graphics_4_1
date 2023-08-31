@@ -326,7 +326,7 @@ void fileReader()
         {
             Pyramid *pyr = new Pyramid();
             fin >> pyr->corner.x >> pyr->corner.y >> pyr->corner.z 
-            >> pyr->widht >> pyr->height
+            >> pyr->width >> pyr->height
             >> pyr->color.r >> pyr->color.g >> pyr->color.b
             >> pyr->surface.ambient >> pyr->surface.diffuse 
             >> pyr->surface.specular >> pyr->surface.reflection
