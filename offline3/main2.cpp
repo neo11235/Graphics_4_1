@@ -22,10 +22,15 @@ void initGL() {
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
 }
 
+
 // Global variables
-GLfloat eyex = 4, eyey = 4, eyez = 4;
-GLfloat centerx = 0, centery = 0, centerz = 0;
-GLfloat upx = 0, upy = 0, upz = 1;
+struct point pos;   // position of the eye
+struct point l;     // look/forward direction
+struct point r;     // right direction
+struct point u;     // up direction
+//GLfloat eyex = 4, eyey = 4, eyez = 4;
+//GLfloat centerx = -100, centery = -100, centerz = 10;
+//GLfloat upx = 0, upy = 0, upz = 1;
 bool isAxes = true, isCube = false, isPyramid = false;
 
 /* Draw axes: X in Red, Y in Green and Z in Blue */
@@ -152,9 +157,9 @@ void display() {
     // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
 
     // control viewing (or camera)
-    gluLookAt(eyex,eyey,eyez,
-              centerx,centery,centerz,
-              upx,upy,upz);
+    gluLookAt(camera.x,camera.y,camera.z,
+              lookat.x,lookat.y,lookat.z,
+              up.x,up.y,up.z);
     
     drawAxes();
     checkerboard.draw();
@@ -315,7 +320,6 @@ void fileReader()
     fin >> checkerboard.width >> checkerboard.surface.ambient 
     >> checkerboard.surface.diffuse >> checkerboard.surface.reflection;
 
-    far = 1000;
     checkerboard.width = 1;
     checkerboard.iteration = 50;
     
@@ -356,6 +360,11 @@ void fileReader()
             >> cube->surface.ambient >> cube->surface.diffuse 
             >> cube->surface.specular >> cube->surface.reflection
             >> cube->surface.shininess;
+
+            cube->corner.x = -10;
+            cube->corner.y = -10;
+            cube->corner.z = 10;
+            cube->side = 1;
            objects.push_back(cube);
         }
         else

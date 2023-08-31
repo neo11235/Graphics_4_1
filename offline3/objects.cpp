@@ -44,7 +44,10 @@ struct Pyramid:Object
     GLdouble height;
     Pyramid(){}
     virtual void draw(){
+        glBegin(GL_QUADS);
 
+
+        glEnd();
     }
 };
 struct Sphere:Object
@@ -69,13 +72,23 @@ struct Cube:Object
 
 
     virtual void draw(){
+        std::cout << "debug cube draw " << corner.x << ' ' << corner.y << ' ' << corner.z << std::endl;
+        std::cout << side << std::endl;
         glBegin(GL_QUADS);
         glColor3f(color.r, color.g, color.b);
         drawHelper(0, 1, 2, 3);
+        glColor3f(0, color.g, color.b);
         drawHelper(4, 5, 6, 7);
+        glColor3f(color.r, color.g, color.b);
         drawHelper(0, 1, 5, 4);
+        glColor3f(color.r, color.g, color.b);
+        
         drawHelper(3, 2, 6, 7);
+        glColor3f(0, color.g, color.b);
+        
         drawHelper(0, 1, 7, 3);
+        glColor3f(color.r, color.g, color.b);
+        
         drawHelper(1, 5, 6, 2);
         glEnd();
     }
@@ -86,7 +99,16 @@ struct Cube:Object
         glVertex3f(corner.x + __dx[j] * side, corner.y + __dy[j] * side, corner.z + __dz[j] * side);
         glVertex3f(corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side);
         glVertex3f(corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side);
+
+        // glVertex3f(corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side);
+        // glVertex3f(corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side);
+        // glVertex3f(corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side);
+        // std::cout << corner.x + __dx[i] * side << ' ' << corner.y + __dy[i] * side << ' ' <<  corner.z + __dz[i] * side << std:: endl;
+        // std::cout << corner.x + __dx[j] * side << ' ' << corner.y + __dy[j] * side << ' ' <<  corner.z + __dz[j] * side << std:: endl;
+        // std::cout << corner.x + __dx[k] * side << ' ' << corner.y + __dy[k] * side << ' ' <<  corner.z + __dz[k] * side << std:: endl;
+        // std::cout << corner.x + __dx[l] * side << ' ' << corner.y + __dy[l] * side << ' ' <<  corner.z + __dz[l] * side << std:: endl;
     }
+
 };
 struct Checkerboard
 {

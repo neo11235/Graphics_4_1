@@ -3,10 +3,20 @@
 //#include <windows.h>  // for MS Windows
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <assert.h>
+#include <cmath>
+#include <cstring>
+#include <iomanip>
+#include "Point.cpp"
+#include "objects.cpp"
+#define vec Point
+#define toRad(x) (((x) * M_PI) / 180)
+using namespace std;
 
-struct point {
-    GLfloat x, y, z;
-};
 
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -16,10 +26,10 @@ void initGL() {
 }
 
 // Global variables
-struct point pos;   // position of the eye
-struct point l;     // look/forward direction
-struct point r;     // right direction
-struct point u;     // up direction
+Point pos;   // position of the eye
+Point l;     // look/forward direction
+Point r;     // right direction
+Point u;     // up direction
 
 /* Draw axes: X in Red, Y in Green and Z in Blue */
 void drawAxes() {
@@ -173,7 +183,7 @@ void drawCone(double height, double radius, int segments) {
 }
 
 void drawCircle_v2(double radius, int segments) {
-    struct point points[segments];
+    Point points[segments];
 
     for (int i = 0; i < segments; i++) {
         double theta = i * 2.0 * M_PI / segments;
@@ -190,7 +200,7 @@ void drawCircle_v2(double radius, int segments) {
 }
 
 void drawCylinder_v2(double height, double radius, int segments) {
-    struct point points[segments+1];
+    Point points[segments+1];
 
     for (int i = 0; i < segments+1; i++) {
         double theta = i * 2.0 * M_PI / segments;
@@ -211,7 +221,7 @@ void drawCylinder_v2(double height, double radius, int segments) {
 }
 
 void drawSphere(double radius, int stacks, int slices) {
-    struct point points[stacks+1][slices+1];
+    Point points[stacks+1][slices+1];
     for (int j = 0; j <= stacks; j++) {
         double phi = -M_PI / 2.0 + j * M_PI / stacks;
         double r = radius * cos(phi);
@@ -240,6 +250,12 @@ void drawSphere(double radius, int stacks, int slices) {
 }
 
 
+GLdouble near, far, fovY, aspectRatio;
+int screenWidth, screenHeight;
+int levelOfRecursion;
+Checkerboard checkerboard;
+vector<void*> objects;
+
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
 void display() {
@@ -258,7 +274,93 @@ void display() {
     // draw
     // drawSphere(5,100,100);
     drawAxes();
+    checkerboard.draw();
+    for(void * vp : objects){
+        ((Object*)(vp))->draw();
+    }
     glutSwapBuffers();  // Render now
+}
+
+// GLdouble near, far, fovY, aspectRatio;
+// int screenWidth, screenHeight;
+// int levelOfRecursion;
+// Checkerboard checkerboard;
+// vector<void*> objects; 
+void fileReader()
+{
+    ifstream fin;
+    fin.open("description.txt");
+    if(!fin.is_open())
+    {
+        cout << "Cannot open description.txt file\n";
+        exit(0);
+    }
+    fin >> near >> far
+    >>fovY >> aspectRatio;
+    fin >> levelOfRecursion >> screenHeight;
+    screenWidth = screenHeight;
+    fin >> checkerboard.width >> checkerboard.surface.ambient 
+    >> checkerboard.surface.diffuse >> checkerboard.surface.reflection;
+
+    //checkerboard.width = 1;
+    checkerboard.iteration = 50;
+    
+    int numberOfObjects;
+    fin >> numberOfObjects;
+    cout << "debug " << numberOfObjects << endl;
+    for(int i = 0; i < numberOfObjects; ++i){
+        string type;
+        fin >> type;
+        if(type == "sphere")
+        {
+            Sphere *sphere = new Sphere();
+            fin >> sphere->center.x >> sphere->center.y >> sphere->center.z
+            >> sphere->radius 
+            >> sphere->color.r >> sphere->color.g >> sphere->color.b
+            >> sphere->surface.ambient >> sphere->surface.diffuse
+            >> sphere->surface.specular >> sphere->surface.reflection
+            >> sphere->surface.shininess;
+            objects.push_back(sphere);
+        }
+        else if(type == "pyramid")
+        {
+            Pyramid *pyr = new Pyramid();
+            fin >> pyr->corner.x >> pyr->corner.y >> pyr->corner.z 
+            >> pyr->widht >> pyr->height
+            >> pyr->color.r >> pyr->color.g >> pyr->color.b
+            >> pyr->surface.ambient >> pyr->surface.diffuse 
+            >> pyr->surface.specular >> pyr->surface.reflection
+            >> pyr->surface.shininess;
+            objects.push_back(pyr);
+        }
+        else if(type == "cube")
+        {
+            Cube *cube = new Cube();
+            fin >> cube->corner.x >> cube->corner.y >> cube->corner.z
+            >> cube->side
+            >> cube->color.r >> cube->color.g >> cube->color.b
+            >> cube->surface.ambient >> cube->surface.diffuse 
+            >> cube->surface.specular >> cube->surface.reflection
+            >> cube->surface.shininess;
+
+            // cube->corner.x = -10;
+            // cube->corner.y = -10;
+            // cube->corner.z = 10;
+            // cube->side = 1;
+           objects.push_back(cube);
+        }
+        else
+        {
+            cout << "Unknown object type\'" << type << "\'\n";
+            cout << i << endl;
+            exit(0);
+        }
+    }
+
+
+
+    fin.close();
+
 }
 
 /* Handler for window re-size event. Called back when the window first appears and
@@ -282,7 +384,7 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
         gluOrtho2D(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect);
     }*/
     // Enable perspective projection with fovy, aspect, zNear and zFar
-    gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+    gluPerspective(fovY, aspect, near, far);
 }
 
 void keyboardListener(unsigned char key, int xx,int yy){
@@ -413,12 +515,13 @@ int main(int argc, char** argv) {
     l.x=0;l.y=0;l.z=-1;
     u.x=0;u.y=1;u.z=0;
     r.x=1;r.y=0;r.z=0;
+    fileReader();
 
     glutInit(&argc, argv);                  // Initialize GLUT
-    glutInitWindowSize(640, 640);           // Set the window's initial width & height
+    glutInitWindowSize(screenHeight, screenWidth);           // Set the window's initial width & height
     glutInitWindowPosition(50, 50);         // Position the window's initial top-left corner
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
-    glutCreateWindow("OpenGL 3D Drawing 2");          // Create a window with the given title
+    glutCreateWindow("Ray Tracing");          // Create a window with the given title
     glutDisplayFunc(display);               // Register display callback handler for window re-paint
     glutReshapeFunc(reshape);               // Register callback handler for window re-shape
 
