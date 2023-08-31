@@ -85,6 +85,9 @@ struct Pyramid:Object
             glVertex3f(corner.x, corner.y, corner.z);
         glEnd();
     }
+    virtual bool intersect(Ray ray, Point& normal, Point& sect){
+        return false;
+    }
 };
 struct Sphere:Object
 {
@@ -101,7 +104,7 @@ struct Sphere:Object
     virtual bool intersect(Ray ray, Point& normal, Point& sect){
         Point uc = center - ray.u;
         if(length(ray.v) < 1e-6){
-            cout << "problem at intersect of sphere, ray direction too small\n";
+            std::cout << "problem at intersect of sphere, ray direction too small" << std::endl;
             return false;
         }
         GLdouble base = dot(uc, ray.v) / length(ray.v);
@@ -174,6 +177,9 @@ struct Cube:Object
         // std::cout << corner.x + __dx[k] * side << ' ' << corner.y + __dy[k] * side << ' ' <<  corner.z + __dz[k] * side << std:: endl;
         // std::cout << corner.x + __dx[l] * side << ' ' << corner.y + __dy[l] * side << ' ' <<  corner.z + __dz[l] * side << std:: endl;
     }
+    virtual bool intersect(Ray ray, Point& normal, Point& sect){
+        return false;
+    }
 
 };
 struct Checkerboard
@@ -215,7 +221,35 @@ struct Checkerboard
 
 struct Triangle{
     Point vertex[3];
-    Triangle(){}  
+    Triangle(){}
+    bool intersect(Ray ray, Point& normal, Point& sect){
+        Point pnormal = cross(vertex[1] - vertex[0], vertex[2] - vertex[0]);
+        pnormal = unit(pnormal);
+        if(abs(dot(ray.v , pnormal)) < EPS)
+            return false;
+        
+        GLdouble t = dot(vertex[0], pnormal) - dot(ray.u, pnormal);
+        t /= dot(ray.v, pnormal);
+        sect = ray.u + ray.v * t;
+        if(!inside(sect))
+            return false;
+        normal = pnormal;
+        if(dot(pnormal, ray.v) > 0)
+        {
+            normal = normal * -1;
+        }
+        return true;
+    } 
+    bool inside(Point p){
+        GLdouble tarea = length(cross(vertex[1] - vertex[0], vertex[2] - vertex[0]));
+        GLdouble ar1 = length(cross(vertex[1] - vertex[0], p - vertex[0]));
+        GLdouble ar2 = length(cross(vertex[2] - vertex[0], p - vertex[0]));
+        GLdouble ar3 = length(cross(p - vertex[1], vertex[2] - vertex[1]));
+        if(abs(ar1 + ar2 + ar3 - tarea) < EPS)
+            return true;
+        return false;
+    }
+    
 };
 
 
