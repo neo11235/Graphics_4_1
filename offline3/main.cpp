@@ -363,6 +363,25 @@ void fileReader()
 
 }
 
+Point pointBuffer[1000][1000];
+void buildPointBuffer()
+{
+    Point center = pos + l * near;
+    GLdouble realHeight = near * tan(fovY / 2);
+    GLdouble realWidth = realHeight;
+    Point corner = center + u * realHeight + r * (-realWidth);
+    GLdouble di = realWidth / screenWidth;
+    GLdouble dj = realHeight / screenHeight;
+    
+    for(int i = 0; i < screenWidth; ++i)
+    {
+        for(int j = 0; j < screenHeight; ++j){
+            pointBuffer[i][j] = center + u * (screenHeight / 2 - j) 
+            + r * (-screenWidth / 2 + i);
+        }
+    }
+}
+
 /* Handler for window re-size event. Called back when the window first appears and
    whenever the window is re-sized with its new width and height */
 void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
@@ -450,6 +469,12 @@ void keyboardListener(unsigned char key, int xx,int yy){
 			r.y = r.y*cos(-rate)-u.y*sin(-rate);
 			r.z = r.z*cos(-rate)-u.z*sin(-rate);
 			break;
+        case '0':
+            cout << "Building point buffer" << endl;
+            buildPointBuffer();
+            cout << "End building point buffer" << endl;
+            
+            break;
 
 		default:
 			break;

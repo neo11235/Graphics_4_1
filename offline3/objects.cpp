@@ -2,6 +2,19 @@
 #define __OBJECT__.h
 #include "Point.cpp"
 #include <GL/glut.h>
+GLdouble sqrNorm(GLdouble v)
+{
+    if(v < 0)
+    {
+        std::cout << "warning value less than 0 " << v << std::endl;
+        return 1e-9;
+    }
+    if(v > 1e15){
+        std::cout << "warning very high value " << v << std::endl;
+    }
+    return v;
+}
+const GLdouble EPS = 1e-6;
 struct Color
 {
     GLdouble r, g, b;
@@ -34,6 +47,7 @@ struct Object
     Color color;
     SurfaceProperty surface;
     virtual void draw() = 0;
+    virtual bool intersect(Ray ray, Point& normal, Point& sect) = 0; 
     Object(){}
 };
 
@@ -84,7 +98,41 @@ struct Sphere:Object
         glutSolidSphere(radius, 100, 100);
         glPopMatrix();
     }
-    
+    virtual bool intersect(Ray ray, Point& normal, Point& sect){
+        Point uc = center - ray.u;
+        if(length(ray.v) < 1e-6){
+            cout << "problem at intersect of sphere, ray direction too small\n";
+            return false;
+        }
+        GLdouble base = dot(uc, ray.v) / length(ray.v);
+
+        GLdouble distance = sqrt(sqrNorm(dot(uc, uc) - base * base));
+        if(distance > radius + EPS){
+            return false;
+        }
+        GLdouble a, b, c;
+        c = dot(uc, uc) - radius * radius;
+        b = 2 * uc.x * ray.v.x + 2 * uc.y * ray.v.y + 2 * uc.z * ray.v.z;
+        b = -b;
+        a = dot(ray.v, ray.v);
+        if(b * b - 4 * a * c < 0)
+            return false;
+        GLdouble t1 = (-b  - sqrt(b * b - 4 * a * c)) / (2 * a);
+        GLdouble t2 = (-b  + sqrt(b * b - 4 * a * c)) / (2 * a);
+        GLdouble t;
+        if(t1 < 0)
+        {
+            if(t2 < 0)
+                return false;
+            t = t2;
+        }
+        else
+            t = t1;
+        
+        sect = ray.u + ray.v * t;
+        normal = unit(sect - center);
+        return true;
+    }
 };
 int __dx[] = {0, 1, 1, 0, 0, 1, 1, 0};
 int __dy[] = {0, 0, 1, 1, 0, 0, 1, 1};
@@ -159,6 +207,9 @@ struct Checkerboard
             }
         }
         glEnd();
+    }
+    Point intersect(Ray ray, Point& normal){
+
     }
 };
 
