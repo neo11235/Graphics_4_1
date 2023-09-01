@@ -2,6 +2,7 @@
 #define __OBJECT__.h
 #include "Point.cpp"
 #include <GL/glut.h>
+#include <vector>
 GLdouble sqrNorm(GLdouble v)
 {
     if(v < 0)
@@ -53,6 +54,11 @@ struct Object
 struct Triangle{
     Point vertex[3];
     Triangle(){}
+    Triangle(Point a, Point b, Point c){
+        vertex[0] = a;
+        vertex[1] = b;
+        vertex[2] = c;
+    }
     bool intersect(Ray ray, Point& normal, Point& sect){
         Point pnormal = cross(vertex[1] - vertex[0], vertex[2] - vertex[0]);
         pnormal = unit(pnormal);
@@ -272,8 +278,17 @@ struct Cube:Object
     Point corner;
     GLdouble side;
     Cube(){}
-
-
+    
+    std::vector<Triangle> triangulate(){
+        std::vector<Triangle> res;
+        triangulateHelper(res, 0, 1, 2, 3);
+        triangulateHelper(res, 4, 5, 6, 7);
+        triangulateHelper(res, 0, 1, 5, 4);
+        triangulateHelper(res, 3, 2, 6, 7);
+        triangulateHelper(res, 0, 1, 7, 3);
+        triangulateHelper(res, 1, 5, 6, 2);
+        return res;
+    }
     virtual void draw(){
         // std::cout << "debug cube draw " << corner.x << ' ' << corner.y << ' ' << corner.z << std::endl;
         // std::cout << side << std::endl;
@@ -288,6 +303,18 @@ struct Cube:Object
         glEnd();
     }
     private:
+    void triangulateHelper(std::vector<Triangle> & out, int i, int j, int k, int l){
+        Triangle tmp;
+        tmp.vertex[0] = {corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side};
+        tmp.vertex[1] = {corner.x + __dx[j] * side, corner.y + __dy[j] * side, corner.z + __dz[j] * side};
+        tmp.vertex[2] = {corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side};
+        out.push_back(tmp);
+
+        tmp.vertex[0] = {corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side};
+        tmp.vertex[0] = {corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side};
+        tmp.vertex[0] = {corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side};
+        out.push_back(tmp);
+    }
     void drawHelper(int i, int j, int k, int l)
     {
         glVertex3f(corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side);
@@ -304,7 +331,18 @@ struct Cube:Object
         // std::cout << corner.x + __dx[l] * side << ' ' << corner.y + __dy[l] * side << ' ' <<  corner.z + __dz[l] * side << std:: endl;
     }
     virtual bool intersect(Ray ray, Point& normal, Point& sect){
-        return false;
+        std::vector<Triangle> trs = triangulate();
+        Point tnormal, tsect;
+        bool res = false;
+        for(Triangle triangle : trs){
+            if(triangle.intersect(ray, tnormal, tsect))
+            {
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+        return res;
     }
 
 };
@@ -341,7 +379,7 @@ struct Checkerboard
         glEnd();
     }
     Point intersect(Ray ray, Point& normal){
-
+        return Point();
     }
 };
 
