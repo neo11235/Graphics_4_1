@@ -382,8 +382,18 @@ struct Checkerboard
         }
         glEnd();
     }
-    Point intersect(Ray ray, Point& normal){
-        return Point();
+    bool intersect(Ray ray, Point& normal, Point &sect){
+        if(abs(ray.v.z) < EPS)
+            return false;
+        GLdouble t = - ray.u.z / ray.v.z;
+        if(t < 0) 
+            return false;
+        sect = ray.u + ray.v * t;
+        if(ray.v.z < 0)
+            normal = Point(0, 0 ,1);
+        else
+            normal = Point(0, 0, -1);
+        return true;
     }
 };
 

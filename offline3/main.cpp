@@ -287,6 +287,25 @@ void display() {
 // int levelOfRecursion;
 // Checkerboard checkerboard;
 // vector<void*> objects; 
+int numberOfNormalLight;
+int numberOfSpotLight;
+struct NormalLight
+{
+    Point position;
+    GLdouble fallOff;
+    NormalLight(){}
+};
+struct SpotLight
+{
+    Point position;
+    GLdouble fallOff;
+    Point look;
+    GLdouble cutoffAngle;
+    SpotLight(){}
+};
+vector<NormalLight> nlights;
+vector<SpotLight> splights;
+
 void fileReader()
 {
     ifstream fin;
@@ -357,8 +376,22 @@ void fileReader()
             exit(0);
         }
     }
-
-
+    fin >> numberOfNormalLight;
+    nlights.resize(numberOfNormalLight);
+    for(int i = 0;i < numberOfNormalLight; ++i)
+    {
+        fin >> nlights[i].position.x >> nlights[i].position.y >> nlights[i].position.z
+        >> nlights[i].fallOff;
+    }
+    fin >> numberOfSpotLight;
+    splights.resize(numberOfSpotLight);
+    for(int i = 0; i < numberOfSpotLight; ++i){
+        fin >> splights[i].position.x >> splights[i].position.y >> splights[i].position.z
+        >> splights[i].fallOff 
+        >> splights[i].look.x >> splights[i].look.y >> splights[i].look.z
+        >> splights[i].cutoffAngle;
+    }
+    cout << "Succesfully read light sources" << endl;
 
     fin.close();
 
@@ -382,6 +415,7 @@ void buildPointBuffer()
         }
     }
 }
+
 
 /* Handler for window re-size event. Called back when the window first appears and
    whenever the window is re-sized with its new width and height */
