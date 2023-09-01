@@ -2,18 +2,18 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++.exe build active file",
-            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/g++",
             "args": [
-                //"-fdiagnostics-color=always",
-                //"-g",
+                "-fdiagnostics-color=always",
+                "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "-lfreeglut",
-                "-lglew32",
-                "-lopengl32",
-                "-lglu32"
+                "${fileDirname}/${fileBasenameNoExtension}.out",
+                "-lglut",
+                "-lGLU",
+                "-lGL"
+            
             ],
             "options": {
                 "cwd": "${fileDirname}"
