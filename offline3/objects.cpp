@@ -50,6 +50,40 @@ struct Object
     virtual bool intersect(Ray ray, Point& normal, Point& sect) = 0; 
     Object(){}
 };
+struct Triangle{
+    Point vertex[3];
+    Triangle(){}
+    bool intersect(Ray ray, Point& normal, Point& sect){
+        Point pnormal = cross(vertex[1] - vertex[0], vertex[2] - vertex[0]);
+        pnormal = unit(pnormal);
+        if(abs(dot(ray.v , pnormal)) < EPS)
+            return false;
+        
+        GLdouble t = dot(vertex[0], pnormal) - dot(ray.u, pnormal);
+        t /= dot(ray.v, pnormal);
+        if(t < 0)
+            return false;
+        sect = ray.u + ray.v * t;
+        if(!inside(sect))
+            return false;
+        normal = pnormal;
+        if(dot(pnormal, ray.v) > 0)
+        {
+            normal = normal * -1;
+        }
+        return true;
+    } 
+    bool inside(Point p){
+        GLdouble tarea = length(cross(vertex[1] - vertex[0], vertex[2] - vertex[0]));
+        GLdouble ar1 = length(cross(vertex[1] - vertex[0], p - vertex[0]));
+        GLdouble ar2 = length(cross(vertex[2] - vertex[0], p - vertex[0]));
+        GLdouble ar3 = length(cross(p - vertex[1], vertex[2] - vertex[1]));
+        if(abs(ar1 + ar2 + ar3 - tarea) < EPS)
+            return true;
+        return false;
+    }
+    
+};
 
 struct Pyramid:Object
 {
@@ -86,6 +120,8 @@ struct Pyramid:Object
         glEnd();
     }
     virtual bool intersect(Ray ray, Point& normal, Point& sect){
+        Triangle tmp;
+        
         return false;
     }
 };
@@ -219,38 +255,6 @@ struct Checkerboard
     }
 };
 
-struct Triangle{
-    Point vertex[3];
-    Triangle(){}
-    bool intersect(Ray ray, Point& normal, Point& sect){
-        Point pnormal = cross(vertex[1] - vertex[0], vertex[2] - vertex[0]);
-        pnormal = unit(pnormal);
-        if(abs(dot(ray.v , pnormal)) < EPS)
-            return false;
-        
-        GLdouble t = dot(vertex[0], pnormal) - dot(ray.u, pnormal);
-        t /= dot(ray.v, pnormal);
-        sect = ray.u + ray.v * t;
-        if(!inside(sect))
-            return false;
-        normal = pnormal;
-        if(dot(pnormal, ray.v) > 0)
-        {
-            normal = normal * -1;
-        }
-        return true;
-    } 
-    bool inside(Point p){
-        GLdouble tarea = length(cross(vertex[1] - vertex[0], vertex[2] - vertex[0]));
-        GLdouble ar1 = length(cross(vertex[1] - vertex[0], p - vertex[0]));
-        GLdouble ar2 = length(cross(vertex[2] - vertex[0], p - vertex[0]));
-        GLdouble ar3 = length(cross(p - vertex[1], vertex[2] - vertex[1]));
-        if(abs(ar1 + ar2 + ar3 - tarea) < EPS)
-            return true;
-        return false;
-    }
-    
-};
 
 
 

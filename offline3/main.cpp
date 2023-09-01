@@ -13,6 +13,7 @@
 #include <iomanip>
 #include "Point.cpp"
 #include "objects.cpp"
+#include "bitmap_image.hpp"
 #define vec Point
 #define toRad(x) (((x) * M_PI) / 180)
 using namespace std;
