@@ -22,12 +22,32 @@ struct Color
     Color(){}
     Color(GLdouble r, GLdouble g, GLdouble b):r(r), g(g), b(b){}
 };
+Color operator*(Color a, GLdouble b){
+    a.r *= b;
+    a.g *= b;
+    a.b *= b;
+    return a;
+}
 
 struct Ray  
 {
     Point u, v;
     Ray(){}
     Ray(Point u, Point v):u(u), v(v){}
+};
+struct NormalLight
+{
+    Point position;
+    GLdouble fallOff;
+    NormalLight(){}
+};
+struct SpotLight
+{
+    Point position;
+    GLdouble fallOff;
+    Point look;
+    GLdouble cutoffAngle;
+    SpotLight(){}
 };
 struct SurfaceProperty
 {
@@ -234,12 +254,13 @@ struct Sphere:Object
         glPopMatrix();
     }
     virtual bool intersect(Ray ray, Point& normal, Point& sect){
+        ray.v = unit(ray.v);
         Point uc = center - ray.u;
         if(length(ray.v) < 1e-6){
             std::cout << "problem at intersect of sphere, ray direction too small" << std::endl;
             return false;
         }
-        GLdouble base = dot(uc, ray.v) / length(ray.v);
+        GLdouble base = dot(uc, ray.v);
 
         GLdouble distance = sqrt(sqrNorm(dot(uc, uc) - base * base));
         if(distance > radius + EPS){
@@ -255,15 +276,12 @@ struct Sphere:Object
         GLdouble t1 = (-b  - sqrt(b * b - 4 * a * c)) / (2 * a);
         GLdouble t2 = (-b  + sqrt(b * b - 4 * a * c)) / (2 * a);
         GLdouble t;
-        if(t1 < 0)
-        {
-            if(t2 < 0)
-                return false;
-            t = t2;
-        }
-        else
-            t = t1;
-        
+        if(t1 < 0)t1 = 1e15;
+        if(t2 < 0)t2 = 1e15;
+        t = std::min(t1, t2);
+        if(abs(t - 1e15) < EPS)
+            return false;
+
         sect = ray.u + ray.v * t;
         normal = unit(sect - center);
         return true;
@@ -354,8 +372,8 @@ struct Checkerboard
 {
     GLdouble width;
     SurfaceProperty surface;
-    Color color1 = {0.0,0.0,0.0}; // white
-    Color color2 = {1.0, 1.0, 1.0}; // black
+    Color color1 = {0.0,0.0,0.0}; // black
+    Color color2 = {1.0, 1.0, 1.0}; // white
     int iteration;
     Checkerboard(){}
 
@@ -382,9 +400,10 @@ struct Checkerboard
         }
         glEnd();
     }
-    bool intersect(Ray ray, Point& normal, Point &sect){
+    bool intersect(Ray ray, Point& normal, Point &sect, Color & color){
         if(abs(ray.v.z) < EPS)
             return false;
+        ray.v = unit(ray.v);
         GLdouble t = - ray.u.z / ray.v.z;
         if(t < 0) 
             return false;
@@ -393,9 +412,19 @@ struct Checkerboard
             normal = Point(0, 0 ,1);
         else
             normal = Point(0, 0, -1);
+        int i = floor(sect.x / width);
+        int j = floor(sect.y / width);
+        if((i + j) % 2 == 0)
+            color = color1;
+        else
+            color = color2;
         return true;
     }
 };
+
+Ray reflect(Ray incoming, Point normal, Point sect){
+
+}
 
 
 

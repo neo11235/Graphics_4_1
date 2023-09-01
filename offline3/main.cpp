@@ -256,6 +256,11 @@ int screenWidth, screenHeight;
 int levelOfRecursion;
 Checkerboard checkerboard;
 vector<void*> objects;
+int numberOfNormalLight;
+int numberOfSpotLight;
+
+vector<NormalLight> nlights;
+vector<SpotLight> splights;
 
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
@@ -287,24 +292,11 @@ void display() {
 // int levelOfRecursion;
 // Checkerboard checkerboard;
 // vector<void*> objects; 
-int numberOfNormalLight;
-int numberOfSpotLight;
-struct NormalLight
-{
-    Point position;
-    GLdouble fallOff;
-    NormalLight(){}
-};
-struct SpotLight
-{
-    Point position;
-    GLdouble fallOff;
-    Point look;
-    GLdouble cutoffAngle;
-    SpotLight(){}
-};
-vector<NormalLight> nlights;
-vector<SpotLight> splights;
+// int numberOfNormalLight;
+// int numberOfSpotLight;
+
+// vector<NormalLight> nlights;
+// vector<SpotLight> splights;
 
 void fileReader()
 {
@@ -400,23 +392,98 @@ void fileReader()
 Point pointBuffer[1000][1000];
 void buildPointBuffer()
 {
+    r = unit(r);
+    l = unit(l);
+    u = unit(u);
     Point center = pos + l * near;
-    GLdouble realHeight = near * tan(fovY / 2);
-    GLdouble realWidth = realHeight;
-    Point corner = center + u * realHeight + r * (-realWidth);
-    GLdouble di = realWidth / screenWidth;
-    GLdouble dj = realHeight / screenHeight;
+    GLdouble realHeight = near * tan(toRad(fovY) / 2);
+    GLdouble realWidth = near * tan(toRad(fovY) * aspectRatio / 2);
+
     
-    for(int i = 0; i < screenWidth; ++i)
+    GLdouble di = 2 * realHeight / screenHeight;
+    GLdouble dj = 2 * realWidth / screenWidth;
+    
+    for(int i = 0; i < screenHeight; ++i)
     {
-        for(int j = 0; j < screenHeight; ++j){
-            pointBuffer[i][j] = center + u * (screenHeight / 2 - j) 
-            + r * (-screenWidth / 2 + i);
+        for(int j = 0; j < screenWidth; ++j){
+
+            pointBuffer[i][j] = center + u * (screenHeight / 2 - i) * di
+            + r * (-screenWidth / 2 + j) * dj;
         }
     }
 }
+Color imgColor[1000][1000];
+const string outputPath = "";
+const string outputImgFileName = "out.bmp"; 
+void saveBitmapFile(){
+    cout << screenHeight << ' ' << screenWidth << endl;
+    bitmap_image image(screenHeight, screenWidth);
+    for(int x = 0; x < screenHeight; ++x){
+        for(int y = 0; y < screenWidth; ++y){
+            
+            image.set_pixel(y,x,imgColor[x][y].r * 255, imgColor[x][y].g * 255, imgColor[x][y].b * 255);
+        }
+    }
+    image.save_image(outputPath + outputImgFileName);
+}
+Color rayTrace(Ray ray, int rdepth){
+    if(rdepth == 0){
+        return Color(0,0,0);
+    }
+    Color rcolor;
+    SurfaceProperty rsurface;
+    GLdouble curMin = 1e15;
+    Point sect, normal;
+    Point tsect, tnormal;
+    bool check = false;
+    for(void * vp : objects){
+        Object * cur = (Object*)vp;
+        if(cur->intersect(ray, tnormal, tsect)){
+            if(length(tsect - ray.u) < curMin){
+                curMin = length(tsect - ray.u);
+                sect = tsect;
+                normal = tnormal;
+                rcolor = cur->color;
+                rsurface = cur->surface;
+                check = true;
+            }
+        }
+    }
+    Color tcolor;
+    if(checkerboard.intersect(ray, tnormal, tsect, tcolor))
+    {
+        if(length(tsect - ray.u) < curMin){
+            curMin = length(tsect - ray.u);
+            rcolor = tcolor;
+            normal = tnormal;
+            sect = tsect;
+            rsurface = checkerboard.surface;
+            check = true;
+        }
+    }
+    if(!check){
+        return Color(0, 0, 0);
+    }
+    // cout << " i wish i were here " << endl;
+    // cout << rcolor.r << ' ' << rcolor.g << ' ' << rcolor.b << endl;  
+    return rcolor;
+    // need to work on it;
+    Color res = rcolor * rsurface.ambient;
 
 
+    
+}
+void startRayTracing(void){
+    for(int i = 0; i < screenHeight; ++i){
+        for(int j = 0; j < screenWidth; ++j)
+        {
+            Ray cur;
+            cur.u = pointBuffer[i][j];
+            cur.v = unit(pointBuffer[i][j] - pos);
+            imgColor[i][j] = rayTrace(cur, 1);
+        }
+    }
+}
 /* Handler for window re-size event. Called back when the window first appears and
    whenever the window is re-sized with its new width and height */
 void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
@@ -508,6 +575,12 @@ void keyboardListener(unsigned char key, int xx,int yy){
             cout << "Building point buffer" << endl;
             buildPointBuffer();
             cout << "End building point buffer" << endl;
+            cout << "Starting ray tracing " << endl;
+            startRayTracing();
+            cout << "Ended ray tracing " << endl;
+            cout << "Saving file " << endl;
+            saveBitmapFile();
+            cout << "Saved bmp file " << endl;
             
             break;
 
