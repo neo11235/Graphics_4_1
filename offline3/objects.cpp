@@ -15,7 +15,7 @@ GLdouble sqrNorm(GLdouble v)
     }
     return v;
 }
-const GLdouble EPS = 1e-6;
+const GLdouble EPS = 1e-2;
 struct Color
 {
     GLdouble r, g, b;
@@ -28,7 +28,12 @@ Color operator*(Color a, GLdouble b){
     a.b *= b;
     return a;
 }
-
+Color operator+(Color a, Color b){
+    a.r += b.r;
+    a.g += b.g;
+    a.b += b.b;
+    return a;
+}
 struct Ray  
 {
     Point u, v;
@@ -422,8 +427,16 @@ struct Checkerboard
     }
 };
 
-Ray reflect(Ray incoming, Point normal, Point sect){
-
+Ray reflect(Ray incoming, Point normal, Point sect)
+{
+    normal = unit(normal);
+    Point cu = incoming.u - sect;
+    normal = normal * dot(normal, cu);
+    Ray res;
+    res.u = sect;
+    res.v = unit(incoming.u + (sect - incoming.u + normal) * 2 - sect) ;
+    res.u = res.u + res.v * .1;
+    return res;
 }
 
 

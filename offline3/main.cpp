@@ -426,14 +426,10 @@ void saveBitmapFile(){
     }
     image.save_image(outputPath + outputImgFileName);
 }
-Color rayTrace(Ray ray, int rdepth){
-    if(rdepth == 0){
-        return Color(0,0,0);
-    }
-    Color rcolor;
-    SurfaceProperty rsurface;
+bool findMinIntersect(Ray ray, Color & rcolor, SurfaceProperty &rsurface,
+    Point & normal, Point & sect
+){
     GLdouble curMin = 1e15;
-    Point sect, normal;
     Point tsect, tnormal;
     bool check = false;
     for(void * vp : objects){
@@ -461,15 +457,53 @@ Color rayTrace(Ray ray, int rdepth){
             check = true;
         }
     }
+    return check;
+}
+Color rayTrace(Ray ray, int rdepth){
+    if(rdepth == 0){
+        return Color(0,0,0);
+    }
+    Color rcolor;
+    SurfaceProperty rsurface;
+    
+    Point sect, normal;
+    
+    bool check = findMinIntersect(ray, rcolor, rsurface, normal, sect);
+    
     if(!check){
         return Color(0, 0, 0);
-    }
-    // cout << " i wish i were here " << endl;
-    // cout << rcolor.r << ' ' << rcolor.g << ' ' << rcolor.b << endl;  
-    return rcolor;
-    // need to work on it;
+    }  
     Color res = rcolor * rsurface.ambient;
+    
+    Ray reflectedRay = reflect(ray, normal, sect);
+    Color reflectedColor = rayTrace(reflectedRay, rdepth - 1);
 
+    res = res + reflectedColor * rsurface.reflection;
+
+    Color dColor;
+    SurfaceProperty dSurface;
+    Point dsect, dnormal;
+
+    GLdouble lambert = 0, phong = 0;
+    for(NormalLight nlight : nlights){
+
+        Point ps = unit(nlight.position - sect);
+
+        Ray tmpray;
+        tmpray.u = sect;
+        tmpray.v = unit(nlight.position - sect);
+        tmpray.u = tmpray.u + tmpray.v * 0.1; 
+        if(findMinIntersect(tmpray, dColor, dSurface, dnormal, dsect))
+            continue;
+
+        GLdouble dis = length(nlight.position - sect);
+        GLdouble sf = exp(-dis * dis * nlight.fallOff);
+        lambert += dot(ps, normal) * sf;
+        phong += pow(dot(reflectedRay.v, ps), rsurface.shininess) * sf;
+    }
+    res = res + rcolor * rsurface.diffuse * lambert + rcolor * rsurface.specular * phong;
+
+    return res;
 
     
 }
@@ -480,7 +514,7 @@ void startRayTracing(void){
             Ray cur;
             cur.u = pointBuffer[i][j];
             cur.v = unit(pointBuffer[i][j] - pos);
-            imgColor[i][j] = rayTrace(cur, 1);
+            imgColor[i][j] = rayTrace(cur, 3);
         }
     }
 }
