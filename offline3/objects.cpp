@@ -121,8 +121,98 @@ struct Pyramid:Object
     }
     virtual bool intersect(Ray ray, Point& normal, Point& sect){
         Triangle tmp;
-        
-        return false;
+        bool res = false;
+        GLdouble curDis = 1e15;
+        Point top(corner.x + width / 2, corner.y + width / 2, corner.z);
+        top = top + Point(0,0,height);
+
+        Point tnormal, tsect;
+
+        tmp.vertex[0] = {top.x, top.y, top.z};
+        tmp.vertex[1] = {corner.x, corner.y, corner.z};
+        tmp.vertex[2] = {corner.x + width, corner.y, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+
+        tmp.vertex[0] = {top.x, top.y, top.z};
+        tmp.vertex[1] = {corner.x + width, corner.y, corner.z};
+        tmp.vertex[2] = {corner.x + width, corner.y + width, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+
+        tmp.vertex[0] = {top.x, top.y, top.z};
+        tmp.vertex[1] = {corner.x + width, corner.y + width, corner.z};
+        tmp.vertex[2] = {corner.x, corner.y + width, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+
+        tmp.vertex[0] = {top.x, top.y, top.z};
+        tmp.vertex[1] = {corner.x, corner.y + width, corner.z};
+        tmp.vertex[2] = {corner.x, corner.y, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+
+        //sqr
+        tmp.vertex[0] = {corner.x, corner.y, corner.z};
+        tmp.vertex[1] = {corner.x + width, corner.y, corner.z};
+        tmp.vertex[2] = {corner.x + width, corner.y + width, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+
+        tmp.vertex[0] = {corner.x, corner.y, corner.z};
+        tmp.vertex[1] = {corner.x + width, corner.y + width, corner.z};
+        tmp.vertex[2] = {corner.x, corner.y + width, corner.z};
+
+        if(tmp.intersect(ray, tnormal, tsect)){
+            GLdouble tdis = length(tsect - ray.u);
+            if(tdis < curDis){
+                curDis = tdis;
+                normal = tnormal;
+                sect = tsect;
+                res = true;
+            }
+        }
+        return res;
     }
 };
 struct Sphere:Object
