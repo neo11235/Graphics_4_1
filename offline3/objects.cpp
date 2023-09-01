@@ -334,12 +334,16 @@ struct Cube:Object
         std::vector<Triangle> trs = triangulate();
         Point tnormal, tsect;
         bool res = false;
+        GLdouble curMin = 1e15;
         for(Triangle triangle : trs){
             if(triangle.intersect(ray, tnormal, tsect))
             {
-                normal = tnormal;
-                sect = tsect;
-                res = true;
+                if(length(tsect - ray.u) < curMin){
+                    curMin = length(tsect - ray.u);
+                    normal = tnormal;
+                    sect = tsect;
+                    res = true;
+                }
             }
         }
         return res;
