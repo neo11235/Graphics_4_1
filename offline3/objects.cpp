@@ -45,6 +45,13 @@ struct NormalLight
     Point position;
     GLdouble fallOff;
     NormalLight(){}
+    void draw(){
+        glPushMatrix();
+        glColor3f(1, 1, 1);
+        glTranslated(position.x, position.y, position.z);
+        glutSolidSphere(5, 100, 100);
+        glPopMatrix();
+    }
 };
 struct SpotLight
 {
@@ -53,6 +60,13 @@ struct SpotLight
     Point look;
     GLdouble cutoffAngle;
     SpotLight(){}
+    void draw(){
+        glPushMatrix();
+        glColor3f(1, 1, 1);
+        glTranslated(position.x, position.y, position.z);
+        glutSolidSphere(5, 100, 100);
+        glPopMatrix();
+    }
 };
 struct SurfaceProperty
 {

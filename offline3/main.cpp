@@ -284,6 +284,12 @@ void display() {
     for(void * vp : objects){
         ((Object*)(vp))->draw();
     }
+    for(NormalLight nlight:nlights){
+        nlight.draw();
+    }
+    for(SpotLight slight : splights){
+        slight.draw();
+    }
     glutSwapBuffers();  // Render now
 }
 
@@ -382,6 +388,7 @@ void fileReader()
         >> splights[i].fallOff 
         >> splights[i].look.x >> splights[i].look.y >> splights[i].look.z
         >> splights[i].cutoffAngle;
+        splights[i].cutoffAngle = toRad(splights[i].cutoffAngle);
     }
     cout << "Succesfully read light sources" << endl;
 
@@ -459,6 +466,13 @@ bool findMinIntersect(Ray ray, Color & rcolor, SurfaceProperty &rsurface,
     }
     return check;
 }
+GLdouble normInvT(GLdouble a){
+    if(a > 1)
+        return 1;
+    if(a < -1)
+        return -1;
+    return a;
+}
 Color rayTrace(Ray ray, int rdepth){
     if(rdepth == 0){
         return Color(0,0,0);
@@ -503,6 +517,11 @@ Color rayTrace(Ray ray, int rdepth){
     }
     for(SpotLight slight: splights){
         Point ps = unit(slight.position - sect);
+
+        GLdouble angle = acos(normInvT(dot(ps * -1, slight.look - slight.position) 
+        / (length(ps) * length(slight.look - slight.position))));
+        if(angle > slight.cutoffAngle)
+            continue;
 
         Ray tmpray;
         tmpray.u = sect;
