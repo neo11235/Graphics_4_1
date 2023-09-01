@@ -3,6 +3,8 @@
 #include "Point.cpp"
 #include <GL/glut.h>
 #include <vector>
+const GLdouble PI = acos(-1.0);
+#define toDeg(x) ((x) * 180 / PI)
 GLdouble sqrNorm(GLdouble v)
 {
     if(v < 0)
@@ -53,6 +55,13 @@ struct NormalLight
         glPopMatrix();
     }
 };
+GLdouble normInvT(GLdouble a){
+    if(a > 1)
+        return 1;
+    if(a < -1)
+        return -1;
+    return a;
+}
 struct SpotLight
 {
     Point position;
@@ -61,10 +70,17 @@ struct SpotLight
     GLdouble cutoffAngle;
     SpotLight(){}
     void draw(){
+        GLdouble height = 10;
+
         glPushMatrix();
         glColor3f(1, 1, 1);
-        glTranslated(position.x, position.y, position.z);
-        glutSolidSphere(5, 100, 100);
+        Point bpos = position + unit(look - position) * 10;
+        Point axis = unit(cross(Point(0, 0, 1), position - bpos));
+        glTranslated(bpos.x, bpos.y, bpos.z);
+        GLdouble angle = acos(normInvT(dot(axis, Point(0,0,1)) / length(axis)));
+        GLdouble base = height * sin(angle);
+        glRotated(toDeg(angle), axis.x, axis.y, axis.z);
+        glutSolidCone(base,height,50,50);
         glPopMatrix();
     }
 };

@@ -466,13 +466,7 @@ bool findMinIntersect(Ray ray, Color & rcolor, SurfaceProperty &rsurface,
     }
     return check;
 }
-GLdouble normInvT(GLdouble a){
-    if(a > 1)
-        return 1;
-    if(a < -1)
-        return -1;
-    return a;
-}
+
 Color rayTrace(Ray ray, int rdepth){
     if(rdepth == 0){
         return Color(0,0,0);
