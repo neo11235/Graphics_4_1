@@ -501,6 +501,21 @@ Color rayTrace(Ray ray, int rdepth){
         lambert += dot(ps, normal) * sf;
         phong += pow(dot(reflectedRay.v, ps), rsurface.shininess) * sf;
     }
+    for(SpotLight slight: splights){
+        Point ps = unit(slight.position - sect);
+
+        Ray tmpray;
+        tmpray.u = sect;
+        tmpray.v = unit(slight.position - sect);
+        tmpray.u = tmpray.u + tmpray.v * 0.1; 
+        if(findMinIntersect(tmpray, dColor, dSurface, dnormal, dsect))
+            continue;
+
+        GLdouble dis = length(slight.position - sect);
+        GLdouble sf = exp(-dis * dis * slight.fallOff);
+        lambert += dot(ps, normal) * sf;
+        phong += pow(dot(reflectedRay.v, ps), rsurface.shininess) * sf;
+    }
     res = res + rcolor * rsurface.diffuse * lambert + rcolor * rsurface.specular * phong;
 
     return res;

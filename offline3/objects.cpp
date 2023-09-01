@@ -308,7 +308,7 @@ struct Cube:Object
         triangulateHelper(res, 4, 5, 6, 7);
         triangulateHelper(res, 0, 1, 5, 4);
         triangulateHelper(res, 3, 2, 6, 7);
-        triangulateHelper(res, 0, 1, 7, 3);
+        triangulateHelper(res, 0, 4, 7, 3);
         triangulateHelper(res, 1, 5, 6, 2);
         return res;
     }
@@ -321,7 +321,7 @@ struct Cube:Object
         drawHelper(4, 5, 6, 7);
         drawHelper(0, 1, 5, 4);
         drawHelper(3, 2, 6, 7);
-        drawHelper(0, 1, 7, 3);
+        drawHelper(0, 4, 7, 3);
         drawHelper(1, 5, 6, 2);
         glEnd();
     }
@@ -334,8 +334,8 @@ struct Cube:Object
         out.push_back(tmp);
 
         tmp.vertex[0] = {corner.x + __dx[i] * side, corner.y + __dy[i] * side, corner.z + __dz[i] * side};
-        tmp.vertex[0] = {corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side};
-        tmp.vertex[0] = {corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side};
+        tmp.vertex[1] = {corner.x + __dx[k] * side, corner.y + __dy[k] * side, corner.z + __dz[k] * side};
+        tmp.vertex[2] = {corner.x + __dx[l] * side, corner.y + __dy[l] * side, corner.z + __dz[l] * side};
         out.push_back(tmp);
     }
     void drawHelper(int i, int j, int k, int l)
