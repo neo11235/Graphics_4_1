@@ -1,8 +1,10 @@
 #ifndef __OBJECT__h
 #define __OBJECT__h
 #include "1805045_Point.cpp"
+#include "1805045_bitmap_image.hpp"
 #include <GL/glut.h>
 #include <vector>
+#include <string>
 const GLdouble PI = acos(-1.0);
 #define toDeg(x) ((x) * 180 / PI)
 GLdouble sqrNorm(GLdouble v)
@@ -403,14 +405,25 @@ struct Cube:Object
     }
 
 };
+// const std::string filename1 = "texture_w.bmp";
+// const std::string filename2 = "texture_b.bmp";
 struct Checkerboard
 {
     GLdouble width;
     SurfaceProperty surface;
     Color color1 = {0.0,0.0,0.0}; // black
     Color color2 = {1.0, 1.0, 1.0}; // white
+    bitmap_image image1;
+    bitmap_image image2;
+    bool texture;
     int iteration;
-    Checkerboard(){}
+    Checkerboard(){
+        image1 = bitmap_image("texture_w.bmp");
+        image2 = bitmap_image("texture_b.bmp");
+        image2.save_image("texture_b_2.bmp");
+
+        texture = false;
+    }
 
     void draw(){
         glBegin(GL_QUADS);
@@ -443,16 +456,50 @@ struct Checkerboard
         if(t < 0) 
             return false;
         sect = ray.u + ray.v * t;
+        if(abs(sect.z) > 1e5){
+            return false;
+        }
         if(ray.v.z < 0)
             normal = Point(0, 0 ,1);
         else
             normal = Point(0, 0, -1);
         int i = floor(sect.x / width);
         int j = floor(sect.y / width);
-        if((i + j) % 2 == 0)
-            color = color1;
+        if(!texture){
+            if((i + j) % 2 == 0)
+                color = color1;
+            else
+                color = color2;
+        }
         else
-            color = color2;
+        { 
+            if((i + j) % 2 != 0)
+            {
+                int x, y;
+                int imwi = image1.width();
+                int imhi = image1.height();
+                x = ((sect.x - i * width) / width) * imwi;
+                y = ((sect.y - j * width) / width) * imhi;
+                // std::cout << x << ' ' << y << std::endl;
+                assert(x >= 0 && x < imwi);
+                assert(y >= 0 && y < imhi);
+                rgb_t pxcolor = image1.get_pixel(x, y);
+                color = Color(pxcolor.red/255.0, pxcolor.green/255.0, pxcolor.blue/255.0);
+            }
+            else
+            {
+                int x, y;
+                int imwi = image2.width();
+                int imhi = image2.height();
+                x = ((sect.x - i * width) / width) * imwi;
+                y = ((sect.y - j * width) / width) * imhi;
+                // std::cout << x << ' ' << y << std::endl;
+                assert(x >= 0 && x < imwi);
+                assert(y >= 0 && y < imhi);
+                rgb_t pxcolor = image2.get_pixel(x, y);
+                color = Color(pxcolor.red/255.0, pxcolor.green/255.0, pxcolor.blue/255.0);
+            }
+        }
         return true;
     }
 };
